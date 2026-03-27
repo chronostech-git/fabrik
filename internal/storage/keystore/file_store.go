@@ -10,31 +10,40 @@ import (
 )
 
 type FileStore struct {
-	dir string
+	Dir string
 }
 
 func NewFileStore(datadir string) *FileStore {
 	return &FileStore{
-		dir: filepath.Join(datadir, "keystore"),
+		Dir: filepath.Join(datadir, "keystore"),
 	}
 }
 
 func (fs *FileStore) StoreKey(k *crypto.Key) error {
-	if err := os.MkdirAll(fs.dir, 0700); err != nil {
+	if k == nil || k.PrivateKey == nil || k.PrivateKey.D == nil {
+		return errors.New("invalid key")
+	}
+
+	if err := os.MkdirAll(fs.Dir, 0700); err != nil {
 		return err
 	}
 
-	// encode ONLY private key bytes
 	privBytes := k.PrivateKey.D.Bytes()
+	if len(privBytes) == 0 {
+		return errors.New("private key is empty")
+	}
 
-	data, _ := rlp.Encode(privBytes)
+	data, err := rlp.Encode(privBytes)
+	if err != nil {
+		return err
+	}
 
-	filename := filepath.Join(fs.dir, k.Address.Hex()+".key")
+	filename := filepath.Join(fs.Dir, k.Address.Hex()+".key")
 	return os.WriteFile(filename, data, 0600)
 }
 
 func (fs *FileStore) GetKey() (*crypto.Key, error) {
-	files, err := os.ReadDir(fs.dir)
+	files, err := os.ReadDir(fs.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +52,7 @@ func (fs *FileStore) GetKey() (*crypto.Key, error) {
 		return nil, errors.New("no keys found")
 	}
 
-	path := filepath.Join(fs.dir, files[0].Name())
+	path := filepath.Join(fs.Dir, files[0].Name())
 	return loadKey(path)
 }
 
@@ -58,12 +67,14 @@ func loadKey(path string) (*crypto.Key, error) {
 		return nil, err
 	}
 
-	priv := crypto.BytesToPrivateKey(privBytes)
+	if len(privBytes) == 0 {
+		return nil, errors.New("decoded private key is empty")
+	}
 
+	priv := crypto.BytesToPrivateKey(privBytes)
 	k := &crypto.Key{
 		PrivateKey: priv,
 	}
-
 	k.Address = crypto.GenerateAddress(&priv.PublicKey)
 	return k, nil
 }

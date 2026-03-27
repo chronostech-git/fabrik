@@ -3,6 +3,7 @@ package blockchain
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -14,7 +15,6 @@ const GenesisFilename = "genesis.dat"
 
 var ErrGenesisMissing = errors.New("genesis not found")
 
-// ✅ PURE DATA ONLY
 type Genesis struct {
 	CreationTime int64
 	GenesisHash  types.Hash
@@ -39,7 +39,10 @@ func (g *Genesis) computeHash() types.Hash {
 }
 
 func (g *Genesis) Write(datadir string) error {
-	data, _ := rlp.Encode(g)
+	data, err := rlp.Encode(g)
+	if err != nil {
+		return err
+	}
 
 	if err := os.MkdirAll(datadir, 0700); err != nil {
 		return err
@@ -49,17 +52,21 @@ func (g *Genesis) Write(datadir string) error {
 	return os.WriteFile(path, data, 0600)
 }
 
-func LoadGenesis(datadir string) (*Genesis, error) {
-	path := filepath.Join(datadir, GenesisFilename)
+func LoadGenesis(root string) (*Genesis, error) {
+	path := filepath.Join(root, "genesis", GenesisFilename)
 
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, ErrGenesisMissing
 	}
 
+	if len(data) == 0 {
+		return nil, fmt.Errorf("genesis.dat is empty")
+	}
+
 	var g Genesis
 	if err := rlp.Decode(data, &g); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("rlp decode failed: %w", err)
 	}
 
 	return &g, nil

@@ -28,6 +28,4 @@ func main() {
 
 	fmt.Println("Address:", account.Address().Hex())
 	fmt.Println("Key stored in keystore")
-
-	// ✅ no wallet.Write anymore
 }

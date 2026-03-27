@@ -16,7 +16,10 @@ type Wallet struct {
 
 func NewWallet(ks keystore.Store) *Wallet {
 	key := crypto.NewKey()
-	_ = ks.StoreKey(key)
+	err := ks.StoreKey(key)
+	if err != nil {
+		panic(err)
+	}
 
 	return &Wallet{
 		KeyStore: ks,

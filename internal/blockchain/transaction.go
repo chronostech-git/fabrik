@@ -33,7 +33,6 @@ func NewTx(sender, receiver types.Address, value types.Amount, nonce uint64, dat
 }
 
 func (tx *Transaction) computeHash() types.Hash {
-	// ⚠️ DO NOT include signature in hash
 	type txData struct {
 		Sender   types.Address
 		Receiver types.Address
@@ -52,4 +51,17 @@ func (tx *Transaction) computeHash() types.Hash {
 
 	enc, _ := rlp.Encode(d)
 	return sha256.Sum256(enc)
+}
+
+// TxView interface functions
+func (tx *Transaction) From() types.Address {
+	return tx.Sender
+}
+
+func (tx *Transaction) To() types.Address {
+	return tx.Receiver
+}
+
+func (tx *Transaction) Val() types.Amount {
+	return tx.Value
 }

@@ -1,119 +1,120 @@
 package rlp
 
 import (
-	"bytes"
-	"encoding/binary"
+	"fmt"
 	"reflect"
+
+	"github.com/chronostech-git/fabrik/internal/types"
 )
 
-func Encode(v interface{}) ([]byte, error) {
-	return encode(reflect.ValueOf(v)), nil
+func Encode(input any) ([]byte, error) {
+	v := reflect.ValueOf(input)
+	return encodeValue(v)
 }
 
-func encode(v reflect.Value) []byte {
-	if v.Kind() == reflect.Pointer {
+func encodeValue(v reflect.Value) ([]byte, error) {
+	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
-			return encodeBytes([]byte{})
+			return []byte{0x80}, nil
 		}
-		return encode(v.Elem())
+		return encodeValue(v.Elem())
+	}
+
+	if v.Type().Name() == "Amount" {
+		amt := v.Interface().(types.Amount)
+		return encodeBytes(amt.Bytes()), nil
 	}
 
 	switch v.Kind() {
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		b := intToBytes(int(v.Uint()))
+		return encodeBytes(b), nil
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		b := intToBytes(int(v.Int()))
+		return encodeBytes(b), nil
+
 	case reflect.String:
-		return encodeBytes([]byte(v.String()))
+		return encodeBytes([]byte(v.String())), nil
 
 	case reflect.Slice:
 		if v.Type().Elem().Kind() == reflect.Uint8 {
-			return encodeBytes(v.Bytes())
+			return encodeBytes(v.Bytes()), nil
 		}
-		return encodeListFromSlice(v)
+		var encodedItems []byte
+		for i := 0; i < v.Len(); i++ {
+			e, err := encodeValue(v.Index(i))
+			if err != nil {
+				return nil, err
+			}
+			encodedItems = append(encodedItems, e...)
+		}
+		return encodeList(encodedItems), nil
 
-	case reflect.Array:
-		return encodeListFromSlice(v)
+	case reflect.Array: // <--- NEW: handle fixed-size arrays like [32]byte
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			b := make([]byte, v.Len())
+			for i := 0; i < v.Len(); i++ {
+				b[i] = byte(v.Index(i).Uint())
+			}
+			return encodeBytes(b), nil
+		}
+		var encodedItems []byte
+		for i := 0; i < v.Len(); i++ {
+			e, err := encodeValue(v.Index(i))
+			if err != nil {
+				return nil, err
+			}
+			encodedItems = append(encodedItems, e...)
+		}
+		return encodeList(encodedItems), nil
 
 	case reflect.Struct:
-		return encodeStruct(v)
-
-	case reflect.Uint, reflect.Uint64:
-		return encodeBytes(intToBytes(v.Uint()))
-
-	case reflect.Int, reflect.Int64:
-		return encodeBytes(intToBytes(uint64(v.Int())))
-
-	case reflect.Bool:
-		if v.Bool() {
-			return encodeBytes([]byte{1})
+		var encodedFields []byte
+		for i := 0; i < v.NumField(); i++ {
+			if !v.Type().Field(i).IsExported() {
+				continue
+			}
+			e, err := encodeValue(v.Field(i))
+			if err != nil {
+				return nil, err
+			}
+			encodedFields = append(encodedFields, e...)
 		}
-		return encodeBytes([]byte{})
+		return encodeList(encodedFields), nil
 
 	default:
-		return encodeBytes([]byte{})
+		return nil, fmt.Errorf("unsupported type in encodeValue: %s", v.Kind())
 	}
-}
-
-func encodeStruct(v reflect.Value) []byte {
-	var buf bytes.Buffer
-
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i)
-
-		if field.PkgPath != "" {
-			continue
-		}
-
-		buf.Write(encode(v.Field(i)))
-	}
-
-	return encodeList(buf.Bytes())
-}
-
-func encodeListFromSlice(v reflect.Value) []byte {
-	var buf bytes.Buffer
-
-	for i := 0; i < v.Len(); i++ {
-		buf.Write(encode(v.Index(i)))
-	}
-
-	return encodeList(buf.Bytes())
 }
 
 func encodeBytes(b []byte) []byte {
-	l := len(b)
-
-	if l == 1 && b[0] < 0x80 {
+	if len(b) == 1 && b[0] <= 0x7f {
 		return b
 	}
-
-	if l <= 55 {
-		return append([]byte{byte(0x80 + l)}, b...)
+	if len(b) <= 55 {
+		return append([]byte{0x80 + byte(len(b))}, b...)
 	}
-
-	lenBytes := intToBytes(uint64(l))
-	return append(append([]byte{byte(0xb7 + len(lenBytes))}, lenBytes...), b...)
+	lenBytes := intToBytes(len(b))
+	return append(append([]byte{0xb7 + byte(len(lenBytes))}, lenBytes...), b...)
 }
 
 func encodeList(b []byte) []byte {
-	l := len(b)
-
-	if l <= 55 {
-		return append([]byte{byte(0xc0 + l)}, b...)
+	if len(b) <= 55 {
+		return append([]byte{0xc0 + byte(len(b))}, b...)
 	}
-
-	lenBytes := intToBytes(uint64(l))
-	return append(append([]byte{byte(0xf7 + len(lenBytes))}, lenBytes...), b...)
+	lenBytes := intToBytes(len(b))
+	return append(append([]byte{0xf7 + byte(len(lenBytes))}, lenBytes...), b...)
 }
 
-func intToBytes(i uint64) []byte {
-	if i == 0 {
+func intToBytes(n int) []byte {
+	if n == 0 {
 		return []byte{}
 	}
-
-	var buf [8]byte
-	binary.BigEndian.PutUint64(buf[:], i)
-
-	i2 := 0
-	for i2 < len(buf) && buf[i2] == 0 {
-		i2++
+	var b []byte
+	for n > 0 {
+		b = append([]byte{byte(n & 0xff)}, b...)
+		n >>= 8
 	}
-	return buf[i2:]
+	return b
 }
