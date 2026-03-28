@@ -14,6 +14,8 @@ type Tx struct {
 	From  types.Address
 	To    types.Address
 	Value types.Amount
+	Data  []byte // For contract execution.
+	Gas   uint64
 }
 
 type ChainState struct {

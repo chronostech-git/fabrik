@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/holiman/uint256"
 )
 
@@ -13,11 +14,11 @@ type VM struct {
 	stack    *Stack
 	gas      uint64
 	memory   map[uint64]uint256.Int
-	storage  map[uint64]uint256.Int
+	storage  map[uint64]uint256.Int // By default we use memory.New(). However, it is not illegal to use LevelDB--it would just be of no difference or use.
 	dispatch map[OpCode]func(*VM) error
 }
 
-func New(prog *Program, gas uint64) *VM {
+func New(prog *Program, state *state.AccountState, gas uint64) *VM {
 	vm := &VM{
 		prog:     prog,
 		pc:       0,
@@ -183,7 +184,7 @@ func (vm *VM) PrintStackData() {
 }
 
 func (vm *VM) PrintGasRemaining() {
-	fmt.Println("gas:", vm.gas)
+	fmt.Println("gas remaining:", vm.gas)
 }
 
 func sha256Sum(data []byte) []byte {

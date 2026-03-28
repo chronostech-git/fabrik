@@ -4,44 +4,41 @@ import (
 	"log"
 
 	"github.com/chronostech-git/fabrik/internal/fvm"
+	"github.com/chronostech-git/fabrik/internal/state"
+	"github.com/chronostech-git/fabrik/internal/storage/memory"
 )
 
 func main() {
-	code, err := fvm.Assemble(`
-		PUSH 5
-		PUSH 10
-		ADD
-		PUSH 2
-		MUL
-		DUP
-		PUSH 3
-		SUB
-		PUSH 0x0a
-		EXP
-		MSTORE
-		MLOAD
-		PUSH 0x01
-		SSTORE
-		SLOAD
-		SHA256
-		PUSH 0x1234
-		ADDRESS
-		CALLER
-		STOP
-	`)
+	state := state.NewAccountState(memory.New())
+
+	instructions, err := fvm.ParseFile("contracts/token.fab")
 	if err != nil {
 		log.Panic(err)
 	}
 
-	prog := fvm.NewProgram(code)
-
-	vm := fvm.New(prog, 10000000)
-
-	err = vm.Run()
+	bytecode, err := fvm.Compile(instructions)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	vm.PrintGasRemaining()
-	vm.PrintStackData()
+	deploy := state.Tx{
+		From: 1,
+		To:   0,
+		Data: bytecode,
+		Gas:  100000,
+	}
+
+	if err := fvm.ApplyTx(state, deploy); err != nil {
+		log.Panic(err)
+	}
+
+	call := fvm.Tx{
+		From: 1,
+		To:   1,
+		Gas:  100000,
+	}
+
+	if err := fvm.ApplyTx(state, call); err != nil {
+		log.Panic(err)
+	}
 }

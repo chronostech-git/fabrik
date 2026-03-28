@@ -13,14 +13,14 @@ var ErrAccountNotFound = errors.New("account not found")
 type AccountState struct {
 	Accounts     map[types.Address]accounts.Account
 	DeadAccounts int
-	db           storage.Database
+	Storage      storage.Database
 }
 
 func NewAccountState(db storage.Database) *AccountState {
 	return &AccountState{
 		Accounts:     make(map[types.Address]accounts.Account),
 		DeadAccounts: 0,
-		db:           db,
+		Storage:      db,
 	}
 }
 
@@ -46,4 +46,12 @@ func (as *AccountState) FilterDead() map[types.Address]bool {
 	as.DeadAccounts = numDead
 
 	return dead
+}
+
+func (as *AccountState) GetAccount(addr types.Address) accounts.Account {
+	return as.Accounts[addr]
+}
+
+func (as *AccountState) AddAccount(account accounts.Account) {
+	as.Accounts[account.Address()] = account
 }

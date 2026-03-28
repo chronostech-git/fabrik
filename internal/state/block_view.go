@@ -9,5 +9,6 @@ type BlockView interface {
 type TxView interface {
 	From() types.Address
 	To() types.Address
-	Val() types.Amount
+	Val() types.Amount // Transaction value
+	Dat() []byte       // Contract bytecode
 }

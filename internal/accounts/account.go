@@ -7,4 +7,5 @@ type Account interface {
 	Alive() bool
 	Address() types.Address
 	UpdateBalance(amount types.Amount) types.Amount
+	Code() []byte
 }

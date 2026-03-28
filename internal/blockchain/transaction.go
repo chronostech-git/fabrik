@@ -65,3 +65,7 @@ func (tx *Transaction) To() types.Address {
 func (tx *Transaction) Val() types.Amount {
 	return tx.Value
 }
+
+func (tx *Transaction) Dat() []byte {
+	return tx.Data
+}

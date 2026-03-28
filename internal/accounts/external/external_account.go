@@ -34,3 +34,7 @@ func (ea *ExternalAccount) UpdateBalance(amount types.Amount) types.Amount {
 	newBalance := ea.balance.Add(amount)
 	return newBalance
 }
+
+func (ea *ExternalAccount) Code() []byte {
+	return nil
+}

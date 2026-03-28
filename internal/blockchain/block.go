@@ -63,6 +63,7 @@ func (b *Block) ToStateTxs() []state.Tx {
 			From:  tx.Sender,
 			To:    tx.Receiver,
 			Value: tx.Value,
+			Data:  []byte{},
 		}
 	}
 	return out

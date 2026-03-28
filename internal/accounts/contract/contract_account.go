@@ -32,10 +32,6 @@ func (ca *ContractAccount) Address() types.Address {
 	return ca.address
 }
 
-func (ca *ContractAccount) Code() []byte {
-	return ca.code
-}
-
 func (ca *ContractAccount) Storage() map[types.Hash]types.Hash {
 	return ca.storage
 }
@@ -43,4 +39,8 @@ func (ca *ContractAccount) Storage() map[types.Hash]types.Hash {
 func (ca *ContractAccount) UpdateBalance(amount types.Amount) types.Amount {
 	newBalance := ca.balance.Add(amount)
 	return newBalance
+}
+
+func (ca *ContractAccount) Code() []byte {
+	return ca.code
 }

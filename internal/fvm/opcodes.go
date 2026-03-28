@@ -1,5 +1,7 @@
 package fvm
 
+import "fmt"
+
 type OpCode byte
 
 // Arithmatic
@@ -44,3 +46,48 @@ const (
 	ADDRESS OpCode = 0x65
 	CALLER  OpCode = 0x66
 )
+
+func (op OpCode) String() string {
+	switch op {
+	case STOP:
+		return "STOP"
+	case ADD:
+		return "ADD"
+	case SUB:
+		return "SUB"
+	case MUL:
+		return "MUL"
+	case DIV:
+		return "DIV"
+	case EXP:
+		return "EXP"
+	case PUSH:
+		return "PUSH"
+	case POP:
+		return "POP"
+	case DUP:
+		return "DUP"
+	case SWAP:
+		return "SWAP"
+	case JMP:
+		return "JMP"
+	case JMPI:
+		return "JMPI"
+	case MSTORE:
+		return "MSTORE"
+	case MLOAD:
+		return "MLOAD"
+	case SSTORE:
+		return "SSTORE"
+	case SLOAD:
+		return "SLOAD"
+	case SHA256:
+		return "SHA256"
+	case ADDRESS:
+		return "ADDRESS"
+	case CALLER:
+		return "CALLER"
+	default:
+		return fmt.Sprintf("UNKNOWN(0x%x)", byte(op))
+	}
+}
