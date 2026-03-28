@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/chronostech-git/fabrik/internal/fvm"
@@ -13,6 +11,22 @@ func main() {
 		PUSH 5
 		PUSH 10
 		ADD
+		PUSH 2
+		MUL
+		DUP
+		PUSH 3
+		SUB
+		PUSH 0x0a
+		EXP
+		MSTORE
+		MLOAD
+		PUSH 0x01
+		SSTORE
+		SLOAD
+		SHA256
+		PUSH 0x1234
+		ADDRESS
+		CALLER
 		STOP
 	`)
 	if err != nil {
@@ -21,12 +35,13 @@ func main() {
 
 	prog := fvm.NewProgram(code)
 
-	vm := fvm.New(prog)
+	vm := fvm.New(prog, 10000000)
 
 	err = vm.Run()
 	if err != nil {
 		log.Panic(err)
 	}
 
-	fmt.Println(hex.EncodeToString(code))
+	vm.PrintGasRemaining()
+	vm.PrintStackData()
 }

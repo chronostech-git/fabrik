@@ -2,172 +2,192 @@ package fvm
 
 import (
 	"crypto/sha256"
+	"fmt"
 
-	"github.com/chronostech-git/fabrik/internal/types"
 	"github.com/holiman/uint256"
 )
 
-type FVM struct {
-	pc     uint64
-	prog   *Program
-	stack  *Stack
-	memory []byte
-
-	address types.Address
-	caller  types.Address
-
-	state StateDB
-
-	stopped bool
+type VM struct {
+	prog     *Program
+	pc       int
+	stack    *Stack
+	gas      uint64
+	memory   map[uint64]uint256.Int
+	storage  map[uint64]uint256.Int
+	dispatch map[OpCode]func(*VM) error
 }
 
-func New(prog *Program) *FVM {
-	return &FVM{
-		stack: NewStack(),
-		prog:  prog,
+func New(prog *Program, gas uint64) *VM {
+	vm := &VM{
+		prog:     prog,
+		pc:       0,
+		stack:    NewStack(),
+		gas:      gas,
+		memory:   make(map[uint64]uint256.Int),
+		storage:  make(map[uint64]uint256.Int),
+		dispatch: make(map[OpCode]func(*VM) error),
+	}
+	vm.initDispatch()
+	return vm
+}
+
+func (vm *VM) initDispatch() {
+	vm.dispatch[STOP] = func(vm *VM) error {
+		vm.pc = len(vm.prog.code)
+		return nil
+	}
+	vm.dispatch[ADD] = func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(*uint256.NewInt(0).Add(&a, &b))
+		return nil
+	}
+	vm.dispatch[SUB] = func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(*uint256.NewInt(0).Sub(&a, &b))
+		return nil
+	}
+	vm.dispatch[MUL] = func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(*uint256.NewInt(0).Mul(&a, &b))
+		return nil
+	}
+	vm.dispatch[DIV] = func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(*uint256.NewInt(0).Div(&a, &b))
+		return nil
+	}
+	vm.dispatch[EXP] = func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(*uint256.NewInt(0).Exp(&a, &b))
+		return nil
+	}
+	vm.dispatch[PUSH] = func(vm *VM) error {
+		if vm.pc+32 > len(vm.prog.code) {
+			return fmt.Errorf("PUSH out of bounds")
+		}
+		val := uint256.NewInt(0)
+		val.SetBytes(vm.prog.code[vm.pc : vm.pc+32])
+		vm.stack.Push(*val)
+		vm.pc += 32
+		return nil
+	}
+	vm.dispatch[POP] = func(vm *VM) error {
+		vm.stack.Pop()
+		return nil
+	}
+	vm.dispatch[DUP] = func(vm *VM) error {
+		val := vm.stack.Peek()
+		vm.stack.Push(*val)
+		return nil
+	}
+	vm.dispatch[SWAP] = func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(a)
+		vm.stack.Push(b)
+		return nil
+	}
+	vm.dispatch[JMP] = func(vm *VM) error {
+		addr := vm.stack.Pop()
+		vm.pc = int(addr.Uint64())
+		return nil
+	}
+	vm.dispatch[JMPI] = func(vm *VM) error {
+		addr := vm.stack.Pop()
+		cond := vm.stack.Pop()
+		if !cond.IsZero() {
+			vm.pc = int(addr.Uint64())
+		}
+		return nil
+	}
+	vm.dispatch[MSTORE] = func(vm *VM) error {
+		addr := vm.stack.Pop()
+		val := vm.stack.Pop()
+		vm.memory[addr.Uint64()] = val
+		return nil
+	}
+	vm.dispatch[MLOAD] = func(vm *VM) error {
+		addr := vm.stack.Pop()
+		val, ok := vm.memory[addr.Uint64()]
+		if !ok {
+			val = *uint256.NewInt(0)
+		}
+		vm.stack.Push(val)
+		return nil
+	}
+	vm.dispatch[SSTORE] = func(vm *VM) error {
+		addr := vm.stack.Pop()
+		val := vm.stack.Pop()
+		vm.storage[addr.Uint64()] = val
+		return nil
+	}
+	vm.dispatch[SLOAD] = func(vm *VM) error {
+		addr := vm.stack.Pop()
+		val, ok := vm.storage[addr.Uint64()]
+		if !ok {
+			val = *uint256.NewInt(0)
+		}
+		vm.stack.Push(val)
+		return nil
+	}
+	vm.dispatch[SHA256] = func(vm *VM) error {
+		val := vm.stack.Pop()
+		buf := val.Bytes()
+		hash := sha256Sum(buf)
+		vm.stack.Push(*uint256.NewInt(0).SetBytes(hash))
+		return nil
+	}
+	vm.dispatch[ADDRESS] = func(vm *VM) error {
+		vm.stack.Push(*uint256.NewInt(0))
+		return nil
+	}
+	vm.dispatch[CALLER] = func(vm *VM) error {
+		vm.stack.Push(*uint256.NewInt(0))
+		return nil
 	}
 }
 
-func (vm *FVM) push(v uint256.Int) {
-	vm.stack.Push(v)
+func (vm *VM) burnGas(amount uint64) error {
+	if vm.gas < amount {
+		return fmt.Errorf("out of gas")
+	}
+	vm.gas -= amount
+	return nil
 }
 
-func (vm *FVM) pop() uint256.Int {
-	return vm.stack.Pop()
-}
-
-func (vm *FVM) Run() error {
-	for !vm.stopped && int(vm.pc) < len(vm.prog.code) {
+func (vm *VM) Run() error {
+	for vm.pc < len(vm.prog.code) {
 		op := OpCode(vm.prog.code[vm.pc])
 		vm.pc++
-
-		switch op {
-
-		case STOP:
-			vm.stopped = true
-
-		case ADD:
-			a := vm.pop()
-			b := vm.pop()
-			var r uint256.Int
-			r.Add(&a, &b)
-			vm.push(r)
-
-		case SUB:
-			a := vm.pop()
-			b := vm.pop()
-			var r uint256.Int
-			r.Sub(&a, &b)
-			vm.push(r)
-
-		case MUL:
-			a := vm.pop()
-			b := vm.pop()
-			var r uint256.Int
-			r.Mul(&a, &b)
-			vm.push(r)
-
-		case DIV:
-			a := vm.pop()
-			b := vm.pop()
-			var r uint256.Int
-			if b.IsZero() {
-				r.Clear()
-			} else {
-				r.Div(&a, &b)
+		if fn, ok := vm.dispatch[op]; ok {
+			if err := vm.burnGas(3); err != nil {
+				return err
 			}
-			vm.push(r)
-
-		case EXP:
-			a := vm.pop()
-			b := vm.pop()
-			var r uint256.Int
-			r.Exp(&a, &b)
-			vm.push(r)
-
-		case PUSH:
-			if int(vm.pc+32) > len(vm.prog.code) {
-				return ErrOutOfBounds
+			if err := fn(vm); err != nil {
+				return err
 			}
-			var val uint256.Int
-			val.SetBytes(vm.prog.code[vm.pc : vm.pc+32])
-			vm.pc += 32
-			vm.push(val)
-
-		case POP:
-			vm.pop()
-
-		case DUP:
-			v := *vm.stack.Peek()
-			vm.push(v)
-
-		case SWAP:
-			a := vm.pop()
-			b := vm.pop()
-			vm.push(a)
-			vm.push(b)
-
-		case JMP:
-			dest := vm.pop()
-			vm.pc = dest.Uint64()
-
-		case JMPI:
-			dest := vm.pop()
-			cond := vm.pop()
-			if !cond.IsZero() {
-				vm.pc = dest.Uint64()
-			}
-
-		case MSTORE:
-			v := vm.pop()
-			offset := v.Uint64()
-			value := vm.pop()
-			if int(offset+32) > len(vm.memory) {
-				newMem := make([]byte, offset+32)
-				copy(newMem, vm.memory)
-				vm.memory = newMem
-			}
-			copy(vm.memory[offset:], value.Bytes())
-
-		case MLOAD:
-			v := vm.pop()
-			offset := v.Uint64()
-			var val uint256.Int
-			if int(offset+32) <= len(vm.memory) {
-				val.SetBytes(vm.memory[offset : offset+32])
-			}
-			vm.push(val)
-
-		case SSTORE:
-			key := vm.pop()
-			val := vm.pop()
-			vm.state.SetState(vm.address, key, val)
-
-		case SLOAD:
-			key := vm.pop()
-			val := vm.state.GetState(vm.address, key)
-			vm.push(val)
-
-		case SHA256:
-			val := vm.pop()
-			hash := sha256.Sum256(val.Bytes())
-			var out uint256.Int
-			out.SetBytes(hash[:])
-			vm.push(out)
-
-		case ADDRESS:
-			var v uint256.Int
-			v.SetBytes(vm.address.Bytes())
-			vm.push(v)
-
-		case CALLER:
-			var v uint256.Int
-			v.SetBytes(vm.caller.Bytes())
-			vm.push(v)
-
-		default:
-			return ErrInvalidOpcode
+		} else {
+			return fmt.Errorf("invalid opcode 0x%x at pc %d", op, vm.pc-1)
 		}
 	}
 	return nil
+}
+
+func (vm *VM) PrintStackData() {
+	fmt.Println("stack:", vm.stack.data)
+}
+
+func (vm *VM) PrintGasRemaining() {
+	fmt.Println("gas:", vm.gas)
+}
+
+func sha256Sum(data []byte) []byte {
+	h := sha256.New()
+	h.Write(data)
+	return h.Sum(nil)
 }

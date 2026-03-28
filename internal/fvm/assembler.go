@@ -31,7 +31,7 @@ func Assemble(src string) ([]byte, error) {
 
 		if op == PUSH {
 			if len(parts) != 2 {
-				return nil, fmt.Errorf("line %d: PUSH requires argument", i+1)
+				return nil, fmt.Errorf("line %d: PUSH requires an argument", i+1)
 			}
 
 			val, err := parseValue(parts[1])
@@ -58,8 +58,7 @@ func parseValue(s string) ([]byte, error) {
 		return nil, fmt.Errorf("invalid number: %s", s)
 	}
 
-	var v uint256.Int
-	v.SetUint64(n)
+	v := uint256.NewInt(0).SetUint64(n)
 	return v.Bytes(), nil
 }
 
@@ -67,10 +66,5 @@ func hexToBytes(s string) ([]byte, error) {
 	if len(s)%2 != 0 {
 		s = "0" + s
 	}
-
-	b, err := hex.DecodeString(s)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
+	return hex.DecodeString(s)
 }
