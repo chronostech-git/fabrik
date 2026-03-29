@@ -104,3 +104,8 @@ func HexToAddress(s string) (Address, error) {
 	copy(a[:], b)
 	return a, nil
 }
+
+func ZeroAddress() Address {
+	var addr Address
+	return addr
+}

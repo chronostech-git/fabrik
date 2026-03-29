@@ -1,20 +1,51 @@
 package fvm
 
-import "github.com/chronostech-git/fabrik/internal/state"
+import (
+	"crypto/sha256"
 
-func ApplyTx(state *state.AccountState, tx *state.Tx) error {
-	fromAccount := state.GetAccount(tx.From)
+	"github.com/chronostech-git/fabrik/internal/state"
+	"github.com/chronostech-git/fabrik/internal/types"
+)
 
+func ApplyTx(accountState *state.AccountState, tx *state.Tx) (types.Address, error) {
 	if tx.To.IsZero() {
-		// this means it is a contract, so we set the account.Code field
-		code := fromAccount.Code()
-		tx.Data = code
+		contractAddr := deriveContractAddress(tx.From, tx.Data)
+
+		contractAccount := accountState.GetOrCreateAccount(contractAddr)
+		contractAccount.SetCode(tx.Data)
+		accountState.AddAccount(contractAccount)
+
+		prog := NewProgram(tx.Data)
+		vm := New(prog, accountState, tx.Gas)
+		if err := vm.Run(); err != nil {
+			return types.Address{}, err
+		}
+
+		return contractAddr, nil
 	}
 
-	to := state.GetAccount(tx.To)
+	contractAccount := accountState.GetAccount(tx.To)
+	code := contractAccount.Code()
 
-	prog := NewProgram(to.Code())
-	vm := New(prog, state, 1000)
+	prog := NewProgram(code)
+	vm := New(prog, accountState, tx.Gas)
+	if err := vm.Run(); err != nil {
+		return types.Address{}, err
+	}
 
-	return vm.Run()
+	vm.PrintGasRemaining()
+	vm.PrintStackData()
+
+	return tx.To, nil
+}
+
+func deriveContractAddress(deployer types.Address, code []byte) types.Address {
+	h := sha256.New()
+	h.Write(deployer[:])
+	h.Write(code)
+	sum := h.Sum(nil)
+
+	var addr types.Address
+	copy(addr[:], sum[len(sum)-len(addr):])
+	return addr
 }

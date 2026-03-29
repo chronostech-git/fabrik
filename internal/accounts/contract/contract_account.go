@@ -20,6 +20,14 @@ func NewAccount(addr types.Address, code []byte) *ContractAccount {
 	}
 }
 
+func (ca *ContractAccount) Code() []byte {
+	return ca.code
+}
+
+func (ca *ContractAccount) SetCode(code []byte) {
+	ca.code = code
+}
+
 func (ca *ContractAccount) Balance() types.Amount {
 	return ca.balance
 }
@@ -39,8 +47,4 @@ func (ca *ContractAccount) Storage() map[types.Hash]types.Hash {
 func (ca *ContractAccount) UpdateBalance(amount types.Amount) types.Amount {
 	newBalance := ca.balance.Add(amount)
 	return newBalance
-}
-
-func (ca *ContractAccount) Code() []byte {
-	return ca.code
 }

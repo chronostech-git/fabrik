@@ -38,3 +38,5 @@ func (ea *ExternalAccount) UpdateBalance(amount types.Amount) types.Amount {
 func (ea *ExternalAccount) Code() []byte {
 	return nil
 }
+
+func (ea *ExternalAccount) SetCode(_ []byte) {}
