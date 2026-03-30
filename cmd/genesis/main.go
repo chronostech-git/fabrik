@@ -12,8 +12,8 @@ import (
 )
 
 var args struct {
-	DataDir string `arg:"required"`
-	Extra   string `arg:"required"`
+	DataDir   string `arg:"required"`
+	ExtraData string `arg:"--data"`
 }
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 		types.Address{},
 		types.NewAmount(1_000_000),
 		0,
-		[]byte(args.Extra),
+		[]byte(args.ExtraData),
 	)
 
 	sig, err := key.Sign(tx.Hash)

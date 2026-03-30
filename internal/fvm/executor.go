@@ -7,6 +7,28 @@ import (
 	"github.com/chronostech-git/fabrik/internal/types"
 )
 
+func ExecuteFromHex(code []byte, accountState *state.AccountState, gasLimit uint64, debug bool) error {
+	program := NewProgram(code)
+	vm := New(program, accountState, gasLimit)
+
+	err := vm.Run()
+	if err != nil {
+		return err
+	}
+
+	if debug {
+		//disasm, err := Disassemble(program.code)
+		//if err != nil {
+		//	return err
+		//}
+
+		vm.PrintStackData()
+		vm.PrintGasRemaining()
+	}
+
+	return nil
+}
+
 func ApplyTx(accountState *state.AccountState, tx *state.Tx) (types.Address, error) {
 	if tx.To.IsZero() {
 		contractAddr := deriveContractAddress(tx.From, tx.Data)

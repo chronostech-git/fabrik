@@ -1,0 +1,48 @@
+=============== Mar 30, 2026 (EDT) ===============
+14:45:15.641206 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+14:45:15.660124 db@open opening
+14:45:15.660552 version@stat F·[] S·0B[] Sc·[]
+14:45:15.661669 db@janitor F·2 G·0
+14:45:15.661695 db@open done T·1.540875ms
+=============== Mar 30, 2026 (EDT) ===============
+14:46:33.500536 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+14:46:33.500757 version@stat F·[] S·0B[] Sc·[]
+14:46:33.500768 db@open opening
+14:46:33.500796 journal@recovery F·1
+14:46:33.501014 journal@recovery recovering @1
+14:46:33.511826 memdb@flush created L0@2 N·1 S·312B ">\x87\xdb..<\xfc\x14,v1":">\x87\xdb..<\xfc\x14,v1"
+14:46:33.512105 version@stat F·[1] S·312B[312B] Sc·[0.25]
+14:46:33.517050 db@janitor F·3 G·0
+14:46:33.517092 db@open done T·16.304537ms
+=============== Mar 30, 2026 (EDT) ===============
+14:47:19.352317 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+14:47:19.352546 version@stat F·[1] S·312B[312B] Sc·[0.25]
+14:47:19.352562 db@open opening
+14:47:19.352603 journal@recovery F·1
+14:47:19.352772 journal@recovery recovering @3
+14:47:19.363691 memdb@flush created L0@5 N·1 S·313B ")\xf9\"..\x80\xb81,v3":")\xf9\"..\x80\xb81,v3"
+14:47:19.363896 version@stat F·[2] S·625B[625B] Sc·[0.50]
+14:47:19.368694 db@janitor F·4 G·0
+14:47:19.368728 db@open done T·16.145688ms
+=============== Mar 30, 2026 (EDT) ===============
+14:47:39.635021 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+14:47:39.635281 version@stat F·[2] S·625B[625B] Sc·[0.50]
+14:47:39.635295 db@open opening
+14:47:39.635327 journal@recovery F·1
+14:47:39.635545 journal@recovery recovering @6
+14:47:39.646388 memdb@flush created L0@8 N·1 S·313B "\xd8\xed\xf7..\x17\x9a\xd8,v5":"\xd8\xed\xf7..\x17\x9a\xd8,v5"
+14:47:39.649992 version@stat F·[3] S·938B[938B] Sc·[0.75]
+14:47:39.653226 db@janitor F·5 G·0
+14:47:39.653294 db@open done T·17.967271ms
+=============== Mar 30, 2026 (EDT) ===============
+14:48:03.611399 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+14:48:03.611630 version@stat F·[3] S·938B[938B] Sc·[0.75]
+14:48:03.611646 db@open opening
+14:48:03.611690 journal@recovery F·1
+14:48:03.611906 journal@recovery recovering @9
+14:48:03.624632 memdb@flush created L0@11 N·1 S·313B "\\\x8b:..\xf1~\xaf,v7":"\\\x8b:..\xf1~\xaf,v7"
+14:48:03.624863 version@stat F·[4] S·1KiB[1KiB] Sc·[1.00]
+14:48:03.627986 db@janitor F·6 G·0
+14:48:03.628014 db@open done T·16.351137ms
+14:48:03.628120 table@move L0@11 -> L1
+14:48:03.628198 version@stat F·[3 1] S·1KiB[938B 313B] Sc·[0.75 0.00]

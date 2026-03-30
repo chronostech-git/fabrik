@@ -19,17 +19,20 @@ func Disassemble(code []byte) (string, error) {
 		op := OpCode(code[pc])
 		pc++
 
+		pushSize := 0
 		if op == PUSH {
-			if pc+32 > len(code) {
+			pushSize = 32
+		}
+
+		if pushSize > 0 {
+			if pc+pushSize > len(code) {
 				return "", fmt.Errorf("invalid PUSH at pc %d", pc-1)
 			}
 
 			var v uint256.Int
-			v.SetBytes(code[pc : pc+32])
+			v.SetBytes(code[pc : pc+pushSize])
 
 			addr := int(v.Uint64())
-
-			// Heuristic: treat as label if it's inside code
 			if addr < len(code) {
 				if _, ok := targets[addr]; !ok {
 					targets[addr] = fmt.Sprintf("L%d", labelCount)
@@ -37,7 +40,7 @@ func Disassemble(code []byte) (string, error) {
 				}
 			}
 
-			pc += 32
+			pc += pushSize
 		}
 	}
 
@@ -52,25 +55,27 @@ func Disassemble(code []byte) (string, error) {
 		pc++
 
 		name := op.String()
-
+		pushSize := 0
 		if op == PUSH {
-			if pc+32 > len(code) {
+			pushSize = 32
+		}
+
+		if pushSize > 0 {
+			if pc+pushSize > len(code) {
 				return "", fmt.Errorf("invalid PUSH at pc %d", pc-1)
 			}
 
 			var v uint256.Int
-			v.SetBytes(code[pc : pc+32])
-
+			v.SetBytes(code[pc : pc+pushSize])
 			val := v.Uint64()
 
-			// Replace with label if known
 			if label, ok := targets[int(val)]; ok {
 				out = append(out, fmt.Sprintf("%s %s", name, label))
 			} else {
 				out = append(out, fmt.Sprintf("%s %d", name, val))
 			}
 
-			pc += 32
+			pc += pushSize
 		} else {
 			out = append(out, name)
 		}

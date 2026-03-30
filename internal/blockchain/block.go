@@ -2,6 +2,8 @@ package blockchain
 
 import (
 	"crypto/sha256"
+	"os"
+	"path/filepath"
 
 	"github.com/chronostech-git/fabrik/internal/serialize/rlp"
 	"github.com/chronostech-git/fabrik/internal/state"
@@ -12,6 +14,7 @@ type BlockHeader struct {
 	PrevHash  types.Hash
 	Timestamp int64
 	TxRoot    types.Hash
+	Height    uint64
 }
 
 type Block struct {
@@ -22,12 +25,13 @@ type Block struct {
 	Hash      types.Hash
 }
 
-func NewBlock(prevHash types.Hash, timestamp int64, txs []*Transaction) *Block {
+func NewBlock(prevHash types.Hash, timestamp int64, txs []*Transaction, height uint64) *Block {
 	b := &Block{
 		Header: BlockHeader{
 			PrevHash:  prevHash,
 			Timestamp: timestamp,
 			TxRoot:    calcTxRoot(txs),
+			Height:    height,
 		},
 		Txs: txs,
 	}
@@ -67,4 +71,20 @@ func (b *Block) ToStateTxs() []state.Tx {
 		}
 	}
 	return out
+}
+
+func (b *Block) Write(datadir string) error {
+	data, err := rlp.Encode(b)
+	if err != nil {
+		return err
+	}
+
+	// format: ./<datadir>/blocks/<block-hash>-<block-height>.dat
+	// example: ./data/blocks/00000000000000000000000000000000-00000000.dat
+	if err := os.MkdirAll(datadir+"/blocks/", 0700); err != nil {
+		return err
+	}
+
+	path := filepath.Join(datadir+"/blocks/", BlockFilename(b))
+	return os.WriteFile(path, data, 0600)
 }

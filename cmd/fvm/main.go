@@ -4,31 +4,24 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chronostech-git/fabrik/internal/accounts/external"
-	"github.com/chronostech-git/fabrik/internal/crypto"
+	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/fvm"
 	"github.com/chronostech-git/fabrik/internal/state"
-	"github.com/chronostech-git/fabrik/internal/storage/keystore"
 	"github.com/chronostech-git/fabrik/internal/storage/memory"
-	"github.com/chronostech-git/fabrik/internal/types"
 )
 
+var args struct {
+	File  string `arg:"--file" help:"Smart contract file (.fab)"`
+	Debug bool   `arg:"--debug" help:"Print debug info"`
+	Gas   int    `arg:"--gas" help:"Gas limit" default:"100000"`
+}
+
 func main() {
-	s := state.NewAccountState(memory.New())
+	arg.MustParse(&args)
 
-	ks := keystore.NewFileStore("data")
+	state := state.NewAccountState(memory.New())
 
-	key, err := ks.GetKey()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	externalAccountAddr := crypto.GenerateAddress(key.PublicKey())
-	alice := external.NewAccount(externalAccountAddr)
-
-	s.AddAccount(alice)
-
-	instructions, err := fvm.ParseFile("contracts/complex.fab")
+	instructions, err := fvm.ParseFile(args.File)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -38,30 +31,17 @@ func main() {
 		log.Panic(err)
 	}
 
-	deploy := &state.Tx{
-		From: alice.Address(),
-		To:   types.ZeroAddress(),
-		Data: bytecode,
-		Gas:  100000,
-	}
+	program := fvm.NewProgram(bytecode)
 
-	contractAddr, err := fvm.ApplyTx(s, deploy)
-	if err != nil {
+	vm := fvm.New(program, state, uint64(args.Gas))
+
+	if err := vm.Run(); err != nil {
 		log.Panic(err)
 	}
 
-	fmt.Println("Contract deployed at:", contractAddr)
-	fmt.Println(fvm.Disassemble(bytecode))
-
-	call := &state.Tx{
-		From: alice.Address(),
-		To:   contractAddr,
-		Gas:  100000,
+	fmt.Println()
+	if args.Debug {
+		vm.PrintStackData()
+		vm.PrintGasRemaining()
 	}
-
-	if _, err := fvm.ApplyTx(s, call); err != nil {
-		log.Panic(err)
-	}
-
-	fmt.Println("Call executed successfully")
 }

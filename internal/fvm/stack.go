@@ -1,8 +1,6 @@
 package fvm
 
-import (
-	"github.com/holiman/uint256"
-)
+import "github.com/holiman/uint256"
 
 type Stack struct {
 	data []uint256.Int
@@ -18,11 +16,12 @@ func (st *Stack) Push(v uint256.Int) {
 	st.data = append(st.data, v)
 }
 
-func (st *Stack) Pop() (ret uint256.Int) {
+func (st *Stack) Pop() uint256.Int {
 	if len(st.data) == 0 {
+		// return zero instead of panicking
 		return *uint256.NewInt(0)
 	}
-	ret = st.data[len(st.data)-1]
+	ret := st.data[len(st.data)-1]
 	st.data = st.data[:len(st.data)-1]
 	return ret
 }
@@ -32,9 +31,17 @@ func (st *Stack) Len() int {
 }
 
 func (st *Stack) Peek() *uint256.Int {
+	if st.Len() == 0 {
+		zero := uint256.NewInt(0)
+		return zero
+	}
 	return &st.data[st.Len()-1]
 }
 
 func (st *Stack) Back(n int) *uint256.Int {
+	if st.Len() <= n {
+		zero := uint256.NewInt(0)
+		return zero
+	}
 	return &st.data[st.Len()-n-1]
 }
