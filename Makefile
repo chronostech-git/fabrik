@@ -1,19 +1,13 @@
 BINDIR := cli
 
-GENESIS := $(BINDIR)/genesis
-WALLET  := $(BINDIR)/wallet
 NODE 	:= $(BINDIR)/node
 CHAIN   := $(BINDIR)/chain
 FVM     := $(BINDIR)/fvm
 ACCOUNT := $(BINDIR)/account
 
-.PHONY: all genesis wallet clean
+.PHONY: all clean
 
-all: wallet node fvm account chain
-
-wallet:
-	@mkdir -p $(BINDIR)
-	go build -o $(WALLET) ./cmd/wallet
+all: node fvm account chain
 
 node:
 	@mkdir -p $(BINDIR)
