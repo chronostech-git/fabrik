@@ -9,11 +9,7 @@ ACCOUNT := $(BINDIR)/account
 
 .PHONY: all genesis wallet clean
 
-all: genesis wallet node fvm account
-
-genesis:
-	@mkdir -p $(BINDIR)
-	go build -o $(GENESIS) ./cmd/genesis
+all: wallet node fvm account chain
 
 wallet:
 	@mkdir -p $(BINDIR)

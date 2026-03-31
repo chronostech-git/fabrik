@@ -3,6 +3,7 @@ package blockchain
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/chronostech-git/fabrik/internal/serialize/rlp"
 	"github.com/chronostech-git/fabrik/internal/state"
@@ -49,12 +50,6 @@ func (c *Chain) SetDataDir(datadir string) {
 }
 
 func (c *Chain) ApplyBlock(b *Block) error {
-	// TODO: uncomment this when ready
-	// validBlock, err := c.Validator.ValidateBlock(b)
-	// if err != nil {
-	// 	return err
-	// }
-
 	txs := b.ToStateTxs()
 
 	if err := c.State.ApplyTransactions(txs); err != nil {
@@ -62,6 +57,23 @@ func (c *Chain) ApplyBlock(b *Block) error {
 	}
 
 	c.Head = b
+
+	return nil
+}
+
+func (c *Chain) ApplyGenesis(coinbaseTx *Transaction) error {
+	if c.Genesis == nil {
+		return ErrGenesisMissing
+	}
+
+	c.Genesis.Txs = append(c.Genesis.Txs, coinbaseTx)
+
+	genesisBlock := NewBlock(types.Empty32(), time.Now().Unix(), c.Genesis.Txs, 0)
+	if err := c.ApplyBlock(genesisBlock); err != nil {
+		return err
+	}
+
+	c.Head = genesisBlock
 
 	return nil
 }

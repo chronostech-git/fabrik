@@ -20,7 +20,6 @@ cmd/
   account/   # account CLI
   chain/     # chain execution CLI (loads genesis, appends test block)
   fvm/       # virtual machine runner CLI
-  genesis/   # genesis generation CLI
   node/      # placeholder CLI (currently no logic)
   wallet/    # wallet/key generation CLI
 
@@ -72,7 +71,6 @@ This creates binaries in `./cli`:
 Other available make targets:
 
 ```bash
-make genesis
 make wallet
 make node
 make chain
@@ -96,33 +94,45 @@ Behavior:
 
 ---
 
-### 2) Create genesis
+### 2) Run chain
 
 ```bash
-./cli/genesis <datadir> --data "optional extra data"
+./cli/chain <datadir> --new [--memory] [--dump]
 ```
 
 Behavior:
-- Loads key material from the datadir keystore
-- Builds a genesis transaction allocating initial funds to coinbase
-- Writes genesis file to `<datadir>/genesis/genesis.dat`
-
----
-
-### 3) Run chain
-
-```bash
-./cli/chain <datadir> [--use-memory] [--debug] [--dump]
-```
-
-Behavior:
-- Loads genesis from `<datadir>`
 - Initializes chain storage (currently opens LevelDB path `<datadir>/manifest`)
-- Adds a test block containing a sample transaction
+- Creates a chain with the genesis block & coinbase transaction
 - Flushes cached blocks to disk
 - Pretty-prints chain output when `--dump` is set
 
-> Note: `--use-memory` is present, but current control flow still proceeds to initialize LevelDB.
+***Example output:***
+
+```bash
+> cli/chain --datadir data --new --dump
+
+2026/03/31 15:40:48 Coinbase transaction created, signed, and verified:
+         hash=0xeec2f312a02fe7534e488f2287ed6cc47cbc58194ebbe133ea89e0d514d777a6
+         sig=0x4ba52ca90590dcfb040d478d34b0b1f80d983ac141e511eca258162ca214c97aeeec3be74f422ffaef42447bb6322eb576c66034f9b1cf707d92139d594110d0
+         valid=true
+
+Genesis Data
+        hash: 0x3e7923130e75257ef709fb8d8c8bffa4050808a7d725dcb90f1f9adedf847b19
+        value: 1000000000000000
+
+Current Block Data
+        hash: 0xb577e981ac2b9242de2798b863f5897c8cba147185b82fc6ac9831be85362bf7
+        time: 1774986048
+        txroot: 0x225cc6da0db382fbfa94c37ee083e91e152ab1b0de41adec164f465e41cfdf21
+        height: 0
+
+State Balance Data
+        Account #1
+                addr: 0xca6a7ba3a1a2d4e4f1dc8339e1d8675a2ffef401
+                balance: 2000000000000000
+
+Finished.
+```
 
 ---
 
@@ -162,10 +172,11 @@ Behavior:
 ```bash
 make
 ./cli/wallet --datadir ./data
-./cli/genesis --datadir ./data --data "local dev genesis"
-./cli/chain --datadir ./data --dump
+./cli/chain --datadir ./data --new [--dump] [--memory]
 ./cli/account --datadir ./data --type external
 ```
+
+**NOTE: cli/wallet --datadir <datadir> must be called before cli/chain --datadir <datadir> --new**
 
 ## Known limitations
 
@@ -180,3 +191,4 @@ make
 - `scripts/clean.sh` exists in addition to `make clean`
 - Project module path: `github.com/chronostech-git/fabrik`
 
+# Please see todos.txt for latest and up-to-date TODO items.

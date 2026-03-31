@@ -19,6 +19,7 @@ type Genesis struct {
 	CreationTime int64
 	GenesisHash  types.Hash
 	Coinbase     types.Address
+	Txs          []*Transaction
 	InitialValue types.Amount
 }
 
