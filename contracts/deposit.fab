@@ -1,0 +1,19 @@
+; --- deposit() ---
+
+CALLER        ; stack: [caller]
+
+DUP           ; stack: [caller caller]
+SHA256        ; stack: [caller key]
+
+DUP           ; stack: [caller key key]
+SLOAD         ; stack: [caller key balance]
+
+PUSH 0
+MLOAD         ; stack: [caller key balance amount]
+
+ADD           ; stack: [caller key newBalance]
+
+SWAP          ; stack: [caller newBalance key]
+SSTORE        ; storage[key] = newBalance
+
+STOP

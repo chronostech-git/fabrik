@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/hex"
 
 	"github.com/chronostech-git/fabrik/internal/types"
 )
@@ -40,4 +41,13 @@ func (k *Key) Verify(hash types.Hash, sig *Signature) bool {
 
 func (k *Key) PublicKey() *ecdsa.PublicKey {
 	return &k.PrivateKey.PublicKey
+}
+
+func (k *Key) PublicKeyBytes() []byte {
+	publicKeyBytes := append(k.PublicKey().X.Bytes(), k.PublicKey().Y.Bytes()...)
+	return publicKeyBytes
+}
+
+func (k *Key) PublicKeyHex() string {
+	return hex.EncodeToString(k.PublicKeyBytes())
 }

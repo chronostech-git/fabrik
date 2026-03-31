@@ -30,9 +30,9 @@ func (ea *ExternalAccount) Address() types.Address {
 	return ea.address
 }
 
-func (ea *ExternalAccount) UpdateBalance(amount types.Amount) types.Amount {
+func (ea *ExternalAccount) UpdateBalance(amount types.Amount) {
 	newBalance := ea.balance.Add(amount)
-	return newBalance
+	ea.balance = newBalance
 }
 
 func (ea *ExternalAccount) Code() []byte {

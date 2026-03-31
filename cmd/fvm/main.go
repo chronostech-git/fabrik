@@ -7,7 +7,6 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/fvm"
 	"github.com/chronostech-git/fabrik/internal/state"
-	"github.com/chronostech-git/fabrik/internal/storage/memory"
 )
 
 var args struct {
@@ -19,7 +18,7 @@ var args struct {
 func main() {
 	arg.MustParse(&args)
 
-	state := state.NewAccountState(memory.New())
+	state := state.NewAccountState()
 
 	instructions, err := fvm.ParseFile(args.File)
 	if err != nil {

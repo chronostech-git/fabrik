@@ -10,12 +10,11 @@ type ContractAccount struct {
 	storage map[types.Hash]types.Hash
 }
 
-func NewAccount(addr types.Address, code []byte) *ContractAccount {
+func NewAccount(addr types.Address) *ContractAccount {
 	return &ContractAccount{
 		balance: types.ZeroAmount(),
 		alive:   true,
 		address: addr,
-		code:    code,
 		storage: make(map[types.Hash]types.Hash),
 	}
 }
@@ -44,7 +43,7 @@ func (ca *ContractAccount) Storage() map[types.Hash]types.Hash {
 	return ca.storage
 }
 
-func (ca *ContractAccount) UpdateBalance(amount types.Amount) types.Amount {
+func (ca *ContractAccount) UpdateBalance(amount types.Amount) {
 	newBalance := ca.balance.Add(amount)
-	return newBalance
+	ca.balance = newBalance
 }

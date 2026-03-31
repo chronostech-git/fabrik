@@ -10,23 +10,28 @@ import (
 	"github.com/chronostech-git/fabrik/internal/types"
 )
 
+var (
+	MaxFutureBlockTime = 15
+)
+
 type Chain struct {
-	DB           storage.Database
-	State        *state.ChainState
-	BlockCache   []*Block
-	CurrentBlock *Block
-	Genesis      *Genesis
-	Head         *Block
+	DB         storage.Database
+	State      *state.ChainState
+	BlockCache []*Block
+	Genesis    *Genesis
+	Head       *Block
 
 	// For disk
 	DataDir string
 }
 
 func New(db storage.Database) *Chain {
-	return &Chain{
+	chain := &Chain{
 		DB:    db,
 		State: state.NewChainState(),
 	}
+
+	return chain
 }
 
 func NewWithGenesis(db storage.Database, genesis *Genesis) *Chain {
@@ -44,13 +49,11 @@ func (c *Chain) SetDataDir(datadir string) {
 }
 
 func (c *Chain) ApplyBlock(b *Block) error {
-	// This is extremely basic validation
-	// TODO: Implement block validators
-	if c.Head != nil {
-		if b.Header.PrevHash != c.Head.Hash {
-			return ErrInvalidBlock
-		}
-	}
+	// TODO: uncomment this when ready
+	// validBlock, err := c.Validator.ValidateBlock(b)
+	// if err != nil {
+	// 	return err
+	// }
 
 	txs := b.ToStateTxs()
 
@@ -58,7 +61,6 @@ func (c *Chain) ApplyBlock(b *Block) error {
 		return err
 	}
 
-	c.CurrentBlock = b
 	c.Head = b
 
 	return nil
@@ -91,7 +93,10 @@ func (c *Chain) FlushCacheToDisk() error {
 			return err
 		}
 
-		c.writeBlock(block)
+		err = c.writeBlock(block)
+		if err != nil {
+			return err
+		}
 
 		blockData, err := rlp.Encode(block)
 		if err != nil {
@@ -113,10 +118,10 @@ func (c *Chain) PrintPretty() {
 	fmt.Println("\tvalue:", c.Genesis.InitialValue.String())
 	fmt.Println()
 	fmt.Println("Current Block Data")
-	fmt.Println("\thash:", c.CurrentBlock.Hash.String())
-	fmt.Println("\ttime:", c.CurrentBlock.Header.Timestamp)
-	fmt.Println("\ttxroot:", c.CurrentBlock.Header.TxRoot.String())
-	fmt.Println("\theight:", c.CurrentBlock.Header.Height)
+	fmt.Println("\thash:", c.Head.Hash.String())
+	fmt.Println("\ttime:", c.Head.Header.Timestamp)
+	fmt.Println("\ttxroot:", c.Head.Header.TxRoot.String())
+	fmt.Println("\theight:", c.Head.Header.Height)
 	fmt.Println()
 	fmt.Println("State Balance Data")
 	numAcc := 0
