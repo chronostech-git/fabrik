@@ -1,4 +1,4 @@
-# Fabrik
+# Fabrik (https://chronostech-git.github.io/fabrik)
 
 Fabrik is an experimental blockchain project written in Go. It includes foundational components for wallets, genesis generation, chain persistence, account modeling, and an early virtual machine (FVM).
 
