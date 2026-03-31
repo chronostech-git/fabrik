@@ -13,12 +13,13 @@ type Transaction struct {
 	Receiver types.Address
 	Value    types.Amount
 	Nonce    uint64
-	Data     []byte
+	Data     []byte // FVM bytecode
 
 	Signature *crypto.Signature
 	Hash      types.Hash
 }
 
+// Create a new transaction
 func NewTx(sender, receiver types.Address, value types.Amount, nonce uint64, data []byte) *Transaction {
 	tx := &Transaction{
 		Sender:   sender,

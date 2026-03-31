@@ -10,6 +10,7 @@ type ExternalAccount struct {
 	address types.Address
 }
 
+// Create a new external account (no code)
 func NewAccount(addr types.Address) *ExternalAccount {
 	return &ExternalAccount{
 		balance: types.ZeroAmount(),
@@ -30,13 +31,16 @@ func (ea *ExternalAccount) Address() types.Address {
 	return ea.address
 }
 
+// Update the external account balance
 func (ea *ExternalAccount) UpdateBalance(amount types.Amount) {
 	newBalance := ea.balance.Add(amount)
 	ea.balance = newBalance
 }
 
+// !DISCARD
 func (ea *ExternalAccount) Code() []byte {
 	return nil
 }
 
+// !DISCARD
 func (ea *ExternalAccount) SetCode(_ []byte) {}

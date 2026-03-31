@@ -25,6 +25,7 @@ type Block struct {
 	Hash      types.Hash
 }
 
+// Create a new block
 func NewBlock(prevHash types.Hash, timestamp int64, txs []*Transaction, height uint64) *Block {
 	b := &Block{
 		Header: BlockHeader{
@@ -40,11 +41,15 @@ func NewBlock(prevHash types.Hash, timestamp int64, txs []*Transaction, height u
 	return b
 }
 
+// Compute, or calculate the blocks hash.
+// Used in NewBlock() function
 func (b *Block) computeHash() types.Hash {
 	enc, _ := rlp.Encode(b.Header)
 	return sha256.Sum256(enc)
 }
 
+// Calculate the root hash of the transactions list of a given block.
+// Used in NewBlock() function.
 func calcTxRoot(txs []*Transaction) types.Hash {
 	enc, _ := rlp.Encode(txs)
 	return sha256.Sum256(enc)
@@ -59,6 +64,11 @@ func (b *Block) Transactions() []state.TxView {
 	return out
 }
 
+// IMPORTANT:
+// This function converts the transactions list of a given block
+// into state transactions. It is here so that we can avoid circular imports
+// when communicating between state/ and the blockchain/ folder.
+// See state/transaction_view.go and state/chain_state.go to see how this works.
 func (b *Block) ToStateTxs() []state.Tx {
 	out := make([]state.Tx, len(b.Txs))
 
@@ -73,6 +83,8 @@ func (b *Block) ToStateTxs() []state.Tx {
 	return out
 }
 
+// Write the block to disk using a special filename consisting of <block hash>-<block height>.dat.
+// NOTE: Blocks are also written to leveldb.
 func (b *Block) Write(datadir string) error {
 	data, err := rlp.Encode(b)
 	if err != nil {

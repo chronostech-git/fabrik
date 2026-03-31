@@ -12,20 +12,21 @@ import (
 )
 
 var (
-	MaxFutureBlockTime = 15
+	MaxFutureBlockTime = 15 // We use this to calculate if a block is stale or not. If creationTime > creationTime + MaxFutureBlockTime -- it is considered stale data and will not be added to the chain.
 )
 
 type Chain struct {
-	DB         storage.Database
+	DB         storage.Database // NOTE: Using the interface means it can be leveldb OR memorydb.
 	State      *state.ChainState
 	BlockCache []*Block
 	Genesis    *Genesis
 	Head       *Block
 
-	// For disk
+	// For writing to disk. All block files will be stored in <datadir>.
 	DataDir string
 }
 
+// Create a new empty chain WITHOUT genesis block.
 func New(db storage.Database) *Chain {
 	chain := &Chain{
 		DB:    db,
@@ -35,6 +36,7 @@ func New(db storage.Database) *Chain {
 	return chain
 }
 
+// Create a new chain WITH the genesis block.
 func NewWithGenesis(db storage.Database, genesis *Genesis) *Chain {
 	c := New(db)
 	c.Genesis = genesis
@@ -45,10 +47,13 @@ func NewWithGenesis(db storage.Database, genesis *Genesis) *Chain {
 	return c
 }
 
+// Set's the datadir to given path (param datadir).
 func (c *Chain) SetDataDir(datadir string) {
 	c.DataDir = datadir
 }
 
+// Updates the blockchain state (balances, accounts, transactions etc...)
+// See state/chain_state.go for more information on how balances etc work
 func (c *Chain) ApplyBlock(b *Block) error {
 	txs := b.ToStateTxs()
 
@@ -61,6 +66,10 @@ func (c *Chain) ApplyBlock(b *Block) error {
 	return nil
 }
 
+// NOTE: This function is needed due to Block and Genesis technically being seperate structures.
+// Yes, block fields and genesis fields may share similarities and are assumed to be the same type,
+// this is why it is important to distinguish the difference between a genesis block, and any proceeding
+// blocks being added to the chain.
 func (c *Chain) ApplyGenesis(coinbaseTx *Transaction) error {
 	if c.Genesis == nil {
 		return ErrGenesisMissing
@@ -94,6 +103,8 @@ func (c *Chain) AddBlockToCache(b *Block) {
 	c.BlockCache = append(c.BlockCache, b)
 }
 
+// Flush (or push) contents of BlockCache and write it to disk / save to leveldb or memorydb.
+// If cache is empty, it will panic.
 func (c *Chain) FlushCacheToDisk() error {
 	if c.emptyCache() {
 		return ErrCacheEmpty
@@ -124,6 +135,8 @@ func (c *Chain) FlushCacheToDisk() error {
 	return nil
 }
 
+// PrintPretty is used when --dump is called with cli/chain command.
+// Example: cli/chain [...] --new --dump.
 func (c *Chain) PrintPretty() {
 	fmt.Println("Genesis Data")
 	fmt.Println("\thash:", c.Genesis.GenesisHash.String())

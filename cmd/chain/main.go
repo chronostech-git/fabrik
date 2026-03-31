@@ -62,6 +62,8 @@ func createCoinbaseTransaction(coinbaseKey *crypto.Key) *blockchain.Transaction 
 	log.Printf("Coinbase transaction created, signed, and verified:\n\t hash=%s\n\t sig=%s\n\t valid=%t\n\n",
 		coinbaseTx.Hash.String(), sig.Hex(), validSig)
 
+	coinbaseTx.Signature = sig
+
 	return coinbaseTx
 }
 

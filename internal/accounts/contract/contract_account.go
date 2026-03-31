@@ -10,6 +10,7 @@ type ContractAccount struct {
 	storage map[types.Hash]types.Hash
 }
 
+// Create a new contract account
 func NewAccount(addr types.Address) *ContractAccount {
 	return &ContractAccount{
 		balance: types.ZeroAmount(),
@@ -43,6 +44,7 @@ func (ca *ContractAccount) Storage() map[types.Hash]types.Hash {
 	return ca.storage
 }
 
+// Update the contract account balance
 func (ca *ContractAccount) UpdateBalance(amount types.Amount) {
 	newBalance := ca.balance.Add(amount)
 	ca.balance = newBalance
