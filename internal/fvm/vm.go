@@ -9,21 +9,22 @@ import (
 )
 
 type VM struct {
-	prog     *Program
-	pc       int
-	stack    *Stack
-	gas      uint64
+	prog     *Program // Wrapper around "code []byte"
+	pc       int      // Program counter
+	stack    *Stack   // Stack (see stack.go for full implementation code)
+	gas      uint64   // Gas used for given contract
 	memory   map[uint64]uint256.Int
 	storage  map[uint64]uint256.Int
-	dispatch map[OpCode]func(*VM) error
+	dispatch map[OpCode]func(*VM) error // Function dispatch for different OpCodes
 }
 
-func New(prog *Program, state *state.AccountState, gas uint64) *VM {
+// Create a new virtual machine given a program, account state, and gasLimit
+func New(prog *Program, state *state.AccountState, gasLimit uint64) *VM {
 	vm := &VM{
 		prog:     prog,
 		pc:       0,
 		stack:    NewStack(),
-		gas:      gas,
+		gas:      gasLimit,
 		memory:   make(map[uint64]uint256.Int),
 		storage:  make(map[uint64]uint256.Int),
 		dispatch: make(map[OpCode]func(*VM) error),
@@ -32,6 +33,7 @@ func New(prog *Program, state *state.AccountState, gas uint64) *VM {
 	return vm
 }
 
+// Initialize the dispatch table and set the corresponding functions for each OpCode.
 func (vm *VM) initDispatch() {
 	vm.dispatch[STOP] = func(vm *VM) error {
 		vm.pc = len(vm.prog.code)
@@ -192,6 +194,8 @@ func sha256Sum(data []byte) []byte {
 	return h.Sum(nil)
 }
 
+// Run the Virtual Machine assuming it has been given the nessecary components.
+// Create the VM -> Parse a .fab file -> Compile the parsed instructions -> call vm.Run().
 func (vm *VM) Run() error {
 	for vm.pc < len(vm.prog.code) {
 		op := OpCode(vm.prog.code[vm.pc])
@@ -210,6 +214,7 @@ func (vm *VM) Run() error {
 	return nil
 }
 
+// Debug functions below
 func (vm *VM) PrintStackData() {
 	fmt.Println("stack:", vm.stack.data)
 }

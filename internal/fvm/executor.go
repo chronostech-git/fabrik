@@ -7,29 +7,10 @@ import (
 	"github.com/chronostech-git/fabrik/internal/types"
 )
 
-func ExecuteFromHex(code []byte, accountState *state.AccountState, gasLimit uint64, debug bool) error {
-	program := NewProgram(code)
-	vm := New(program, accountState, gasLimit)
-
-	err := vm.Run()
-	if err != nil {
-		return err
-	}
-
-	if debug {
-		//disasm, err := Disassemble(program.code)
-		//if err != nil {
-		//	return err
-		//}
-
-		vm.PrintStackData()
-		vm.PrintGasRemaining()
-	}
-
-	return nil
-}
-
-func ApplyTx(accountState *state.AccountState, tx *state.Tx) (types.Address, error) {
+// When the FVM runs, things change in the state.
+// We can apply the transaction to the state so long as the Virtual Machine
+// runs beginning to end.
+func ApplyTx(accountState *state.AccountState, tx *state.Tx, debug bool) (types.Address, error) {
 	if tx.To.IsZero() {
 		contractAddr := deriveContractAddress(tx.From, tx.Data)
 
@@ -55,8 +36,10 @@ func ApplyTx(accountState *state.AccountState, tx *state.Tx) (types.Address, err
 		return types.Address{}, err
 	}
 
-	vm.PrintGasRemaining()
-	vm.PrintStackData()
+	if debug {
+		vm.PrintGasRemaining()
+		vm.PrintStackData()
+	}
 
 	return tx.To, nil
 }

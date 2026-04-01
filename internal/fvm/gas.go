@@ -1,5 +1,6 @@
 package fvm
 
+// Gas table is used to calculate different operations gas costs.
 var gasTable = map[OpCode]uint64{
 	STOP: 0,
 

@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+// Generates a 20-bit address derived from a cryptographic public key
 func GenerateAddress(pub *ecdsa.PublicKey) types.Address {
 	x := pub.X.Bytes()
 	y := pub.Y.Bytes()

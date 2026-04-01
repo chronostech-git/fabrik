@@ -16,6 +16,8 @@ type Instruction struct {
 	Line   int
 }
 
+// Parse a .fab contract file.
+// See contracts/ folder for example contracts (simple.fab, complex.fab, deposit.fab)
 func ParseFile(path string) ([]Instruction, error) {
 	if !strings.HasSuffix(path, ".fab") {
 		return nil, fmt.Errorf("expected .fab file")
@@ -128,11 +130,6 @@ func cleanLine(line string) string {
 	return strings.TrimSpace(line)
 }
 
-func isNumber(s string) bool {
-	_, err := strconv.ParseUint(s, 10, 64)
-	return err == nil
-}
-
 func parseValue(s string) ([]byte, error) {
 	if strings.HasPrefix(s, "0x") {
 		return hexToBytes(s[2:])
@@ -160,21 +157,6 @@ func isIdentifier(s string) bool {
 	}
 	for _, r := range s {
 		if !(r == '_' ||
-			(r >= 'a' && r <= 'z') ||
-			(r >= 'A' && r <= 'Z') ||
-			(r >= '0' && r <= '9')) {
-			return false
-		}
-	}
-	return true
-}
-
-func isValidLabel(s string) bool {
-	if s == "" {
-		return false
-	}
-	for _, r := range s {
-		if !(r == '_' || r == '-' ||
 			(r >= 'a' && r <= 'z') ||
 			(r >= 'A' && r <= 'Z') ||
 			(r >= '0' && r <= '9')) {

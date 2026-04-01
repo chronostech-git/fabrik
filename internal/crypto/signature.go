@@ -1,3 +1,8 @@
+/*
+This file *could* potentially be in the types/ folder as it is technically a type.
+For now, it will stay in the crypto/ folder and be used as crypto.Signature or *crypto.Signature (ptr).
+*/
+
 package crypto
 
 import (

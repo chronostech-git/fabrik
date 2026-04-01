@@ -93,5 +93,5 @@ func main() {
 		chain.PrintPretty()
 	}
 
-	fmt.Println("Finished.")
+	fmt.Println("Finished initializing the blockchain.")
 }

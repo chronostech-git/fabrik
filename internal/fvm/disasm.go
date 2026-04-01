@@ -7,13 +7,19 @@ import (
 	"github.com/holiman/uint256"
 )
 
+// Takes in bytecode and converts it into a set of instructions.
+// NOTE: This will be useful when a contract can be executed only given the bytecode.
+// The following example using EVM (Ethereum Virtual Machine), would PUSH 2 and 3, add them,
+// and then stop the program (a similar feature will be used for Fabrik Virtual Machine).
+// EVM example: ./evm run --debug 60026003016000
+// FVM example: cli/fvm --run 60026003016000 --debug
 func Disassemble(code []byte) (string, error) {
 	var out []string
 
-	// First pass: find jump targets
 	targets := make(map[int]string)
 	labelCount := 0
 
+	// FIRST PASS
 	pc := 0
 	for pc < len(code) {
 		op := OpCode(code[pc])
@@ -44,7 +50,7 @@ func Disassemble(code []byte) (string, error) {
 		}
 	}
 
-	// Second pass: actual disassembly
+	// SECOND PASS
 	pc = 0
 	for pc < len(code) {
 		if label, ok := targets[pc]; ok {

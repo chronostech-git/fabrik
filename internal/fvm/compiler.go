@@ -2,11 +2,13 @@ package fvm
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/holiman/uint256"
 )
 
+// Compile function takes in the broken down instructions of a .fab contract file
+// and returns the bytecode which is then ran using vm.Run().
+// FVM creation -> parser -> compiler -> vm.Run().
 func Compile(instructions []Instruction) ([]byte, error) {
 	var bytecode []byte
 
@@ -80,9 +82,9 @@ func Compile(instructions []Instruction) ([]byte, error) {
 	return bytecode, nil
 }
 
-func isLabel(s string) bool {
-	if _, err := strconv.ParseUint(s, 10, 64); err == nil {
-		return false
-	}
-	return true
-}
+// func isLabel(s string) bool {
+// 	if _, err := strconv.ParseUint(s, 10, 64); err == nil {
+// 		return false
+// 	}
+// 	return true
+// }

@@ -13,6 +13,7 @@ type Validator struct {
 	account *contract.ContractAccount
 }
 
+// Create a new validator
 func NewValidator(chain *Chain, account *contract.ContractAccount) *Validator {
 	return &Validator{
 		chain:   chain,
@@ -20,6 +21,7 @@ func NewValidator(chain *Chain, account *contract.ContractAccount) *Validator {
 	}
 }
 
+// Set the stake with a given value
 func (v *Validator) SetStake(amount types.Amount) error {
 	if amount.Cmp(StakeMinimumDeposit) < 32 {
 		return ErrStakeMinimumNotMet
@@ -27,6 +29,8 @@ func (v *Validator) SetStake(amount types.Amount) error {
 
 	s := NewStake(amount)
 	s.contractAddress = v.account.Address()
+
+	v.executeDepositContractCode(v.account)
 
 	v.account.UpdateBalance(s.value)
 

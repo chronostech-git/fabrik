@@ -15,6 +15,7 @@ type AccountState struct {
 	DeadAccounts int
 }
 
+// Create account state
 func NewAccountState() *AccountState {
 	return &AccountState{
 		Accounts:     make(map[types.Address]accounts.Account),
@@ -22,6 +23,7 @@ func NewAccountState() *AccountState {
 	}
 }
 
+// Update balance given a specific address. If the address is not found, it throws an error.
 func (as *AccountState) UpdateBalance(addr types.Address, newBalance types.Amount) error {
 	account, ok := as.Accounts[addr]
 	if !ok {
@@ -31,6 +33,8 @@ func (as *AccountState) UpdateBalance(addr types.Address, newBalance types.Amoun
 	return nil
 }
 
+// Not used currently, but will eventually be used to determine how active
+// account state is.
 func (as *AccountState) FilterDead() map[types.Address]bool {
 	dead := make(map[types.Address]bool)
 	for addr, account := range as.Accounts {
@@ -42,6 +46,7 @@ func (as *AccountState) FilterDead() map[types.Address]bool {
 	return dead
 }
 
+// NOTE: This may be removed for two reasons -- Lack of use, and simplicity.
 func (as *AccountState) GetOrCreateAccount(addr types.Address) accounts.Account {
 	acct, ok := as.Accounts[addr]
 	if !ok {
@@ -51,10 +56,12 @@ func (as *AccountState) GetOrCreateAccount(addr types.Address) accounts.Account 
 	return acct
 }
 
+// Get an account given an account address
 func (as *AccountState) GetAccount(addr types.Address) accounts.Account {
 	return as.Accounts[addr]
 }
 
+// Add an account to the state
 func (as *AccountState) AddAccount(account accounts.Account) {
 	as.Accounts[account.Address()] = account
 }

@@ -1,5 +1,6 @@
 package fvm
 
+// NOTE: More opcodes are coming.
 var opMap = map[string]OpCode{
 	"STOP":    STOP,
 	"ADD":     ADD,

@@ -13,12 +13,14 @@ type FileStore struct {
 	Dir string
 }
 
+// Create a new File Storage given a Data Directory specified using cli/wallet --datadir <datadir>
 func NewFileStore(datadir string) *FileStore {
 	return &FileStore{
 		Dir: filepath.Join(datadir, "keystore"),
 	}
 }
 
+// Interface function that writes the key to the .key file
 func (fs *FileStore) StoreKey(k *crypto.Key) error {
 	if k == nil || k.PrivateKey == nil || k.PrivateKey.D == nil {
 		return errors.New("invalid key")
@@ -42,6 +44,7 @@ func (fs *FileStore) StoreKey(k *crypto.Key) error {
 	return os.WriteFile(filename, data, 0600)
 }
 
+// Loads a key from the file store given the <datadir>/keystore directory exists and has a key.
 func (fs *FileStore) GetKey() (*crypto.Key, error) {
 	files, err := os.ReadDir(fs.Dir)
 	if err != nil {
@@ -56,6 +59,7 @@ func (fs *FileStore) GetKey() (*crypto.Key, error) {
 	return loadKey(path)
 }
 
+// Used to load a key inside GetKey() interface function.
 func loadKey(path string) (*crypto.Key, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
