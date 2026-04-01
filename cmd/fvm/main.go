@@ -41,9 +41,11 @@ func runSmartContractFromFile(
 		return err
 	}
 
+	fmt.Println("Compiled bytecode:", hex.EncodeToString(bytecode))
+
 	if debug {
 		vm.PrintStackData()
-		// vm.PrintDisasm()
+		vm.PrintDisasm()
 		vm.PrintGasRemaining()
 	}
 
@@ -67,7 +69,7 @@ func runSmartContractFromHex(
 	if debug {
 		fmt.Println("Input (hexidecimal):", hex.EncodeToString(hexCode))
 		vm.PrintStackData()
-		// vm.PrintDisasm()
+		vm.PrintDisasm()
 		vm.PrintGasRemaining()
 	}
 

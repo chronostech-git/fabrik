@@ -17,8 +17,25 @@ import (
 
 var args struct {
 	DataDir    string `arg:"required"`
-	Type       string `arg:"--type,required"`
-	WithWallet bool   `arg:"--wallet"`
+	Type       string `arg:"--type,required"` // external or contract
+	WithWallet bool   `arg:"--wallet"`        // If true, a new wallet will be created. Otherwise, loadWalletAndKey is used.
+}
+
+func createNewWallet(ks keystore.Store) (*blockchain.Wallet, *crypto.Key) {
+	wallet := blockchain.NewWallet(ks)
+	key := wallet.Key
+	return wallet, key
+}
+
+func loadWalletAndKey(ks keystore.Store) (*blockchain.Wallet, *crypto.Key) {
+	key, err := ks.GetKey()
+	if err != nil {
+		log.Panic(err)
+	}
+	return &blockchain.Wallet{
+		KeyStore: ks,
+		Key:      key,
+	}, nil
 }
 
 func main() {
@@ -34,16 +51,9 @@ func main() {
 	store = keystore.NewFileStore(args.DataDir)
 
 	if args.WithWallet {
-		wallet = blockchain.NewWallet(store)
-		key = wallet.Key
-		log.Printf("Wallet created address=%s", key.Address.String())
+		wallet, key = createNewWallet(store)
 	} else {
-		var err error
-		key, err = store.GetKey()
-		if err != nil {
-			log.Panicf("failed to load key from datadir: %v", err)
-		}
-		log.Printf("Wallet loaded from datadir=%s address=%s", args.DataDir, key.Address.String())
+		wallet, key = loadWalletAndKey(store)
 	}
 
 	switch args.Type {

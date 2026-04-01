@@ -21,14 +21,13 @@ cmd/
   chain/     # chain execution CLI (loads genesis, appends test block)
   fvm/       # virtual machine runner CLI
   node/      # placeholder CLI (currently no logic)
-  wallet/    # wallet/key generation CLI
 
 internal/
   accounts/
   blockchain/
   crypto/
   fvm/
-  network/
+  p2p/
   serialize/rlp/
   state/
   storage/
@@ -63,7 +62,6 @@ make
 This creates binaries in `./cli`:
 
 - `cli/genesis`
-- `cli/wallet`
 - `cli/node`
 - `cli/fvm`
 - `cli/account`
@@ -71,7 +69,6 @@ This creates binaries in `./cli`:
 Other available make targets:
 
 ```bash
-make wallet
 make node
 make chain
 make fvm
@@ -81,20 +78,7 @@ make clean
 
 ## CLI usage
 
-### 1) Create a wallet
-
-```bash
-./cli/wallet <datadir>
-```
-
-Behavior:
-- Ensures `<datadir>` exists
-- Creates/loads a key in `<datadir>/keystore`
-- Prints public key information and a private-key warning
-
----
-
-### 2) Run chain
+### 1) Run chain
 
 ```bash
 ./cli/chain <datadir> --new [--memory] [--dump]
@@ -136,7 +120,7 @@ Finished.
 
 ---
 
-### 4) Create an account record
+### 2) Create an account record
 
 ```bash
 ./cli/account <datadir> --type <external|contract>
@@ -149,7 +133,7 @@ Behavior:
 
 ---
 
-### 5) Run FVM (prototype)
+### 3) Run FVM (prototype)
 
 ```bash
 ./cli/fvm --file <contract.fab> [--gas 100000] [--debug]
@@ -163,9 +147,17 @@ Behavior:
 
 ---
 
-### 6) `node` command status
+### 4) `node` command status
 
-`cmd/node` currently contains an empty `main()` and does not perform node operations yet.
+Start a node server
+```bash
+./cli/node --boot <port> 
+```
+
+Connect to server as a peer
+```bash
+./cli/node --peer
+```
 
 ## Typical local flow
 
@@ -175,15 +167,6 @@ make
 ./cli/chain --datadir ./data --new [--dump] [--memory]
 ./cli/account --datadir ./data --type external
 ```
-
-**NOTE: cli/wallet --datadir <datadir> must be called before cli/chain --datadir <datadir> --new**
-
-## Known limitations
-
-- No production networking/peer sync behavior exposed via CLI
-- `node` command is currently a placeholder
-- FVM is early-stage and intended for experimentation
-- Limited hardening and validation for production security/performance
 
 ## Development notes
 

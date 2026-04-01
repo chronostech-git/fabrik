@@ -12,5 +12,6 @@ require (
 require (
 	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 )

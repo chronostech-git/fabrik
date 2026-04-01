@@ -8,7 +8,7 @@ import (
 )
 
 type Validator struct {
-	chain   *Chain // Every validator
+	chain   *Chain // Every validator holds a copy of the chain
 	stake   *Stake
 	account *contract.ContractAccount
 }

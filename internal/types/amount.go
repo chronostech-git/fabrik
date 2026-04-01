@@ -56,6 +56,10 @@ func (a Amount) LessThan(b Amount) bool {
 	return a.i.Cmp(b.i) < 0
 }
 
+func (a Amount) GreaterThan(b Amount) bool {
+	return a.i.Cmp(b.i) > 0
+}
+
 func (a Amount) Cmp(b Amount) int {
 	return a.Big().Cmp(b.Big())
 }

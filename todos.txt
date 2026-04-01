@@ -10,10 +10,10 @@ TODO (done.): Remove wallet generation, combine it with cmd/accounts.
     NOTE: If the supplied data directory DOES exist, and has keystore/<address>.key, then Create
           the account using that key
 
-TODO: Add comments to code where nessecary
+TODO (done.): Add comments to code where nessecary
 
-TODO: Create a CONTRIBUTING.md file for contributors to follow
+TODO (done.): Create a CONTRIBUTING.md file for contributors to follow
 
-TODO: Add a formatting script under scripts/format.sh (mostly for contributers).
+TODO (done.): Add a formatting script under scripts/format.sh (mostly for contributers).
 
 TODO: Begin working on the P2P folder in /internal
