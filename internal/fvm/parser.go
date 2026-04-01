@@ -132,7 +132,7 @@ func cleanLine(line string) string {
 
 func parseValue(s string) ([]byte, error) {
 	if strings.HasPrefix(s, "0x") {
-		return hexToBytes(s[2:])
+		return HexToBytes(s[2:])
 	}
 
 	n, err := strconv.ParseUint(s, 10, 64)
@@ -166,7 +166,7 @@ func isIdentifier(s string) bool {
 	return true
 }
 
-func hexToBytes(s string) ([]byte, error) {
+func HexToBytes(s string) ([]byte, error) {
 	if len(s)%2 != 0 {
 		s = "0" + s
 	}

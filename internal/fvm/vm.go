@@ -3,6 +3,7 @@ package fvm
 import (
 	"crypto/sha256"
 	"fmt"
+	"log"
 
 	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/holiman/uint256"
@@ -12,7 +13,7 @@ type VM struct {
 	prog     *Program // Wrapper around "code []byte"
 	pc       int      // Program counter
 	stack    *Stack   // Stack (see stack.go for full implementation code)
-	gas      uint64   // Gas used for given contract
+	gas      uint64   // Gas limit and or gas remaining for given contract
 	memory   map[uint64]uint256.Int
 	storage  map[uint64]uint256.Int
 	dispatch map[OpCode]func(*VM) error // Function dispatch for different OpCodes
@@ -221,4 +222,13 @@ func (vm *VM) PrintStackData() {
 
 func (vm *VM) PrintGasRemaining() {
 	fmt.Println("gas remaining:", vm.gas)
+}
+
+func (vm *VM) PrintDisasm() {
+	disasm, err := Disassemble(vm.prog.code)
+	if err != nil {
+		log.Panic(err)
+	}
+	fmt.Println("Disassembled bytecode:")
+	fmt.Println(disasm)
 }
