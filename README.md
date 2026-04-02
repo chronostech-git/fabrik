@@ -20,7 +20,7 @@ cmd/
   account/   # account CLI
   chain/     # chain execution CLI (loads genesis, appends test block)
   fvm/       # virtual machine runner CLI
-  node/      # placeholder CLI (currently no logic)
+  node/      # very early stages of development 
 
 internal/
   accounts/

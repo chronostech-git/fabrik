@@ -1,38 +1,47 @@
 package p2p
 
 import (
+	"bufio"
 	"fmt"
-	"log"
 	"net"
-
-	"github.com/google/uuid"
 )
 
+// A peer represents a single connection to another node
 type Peer struct {
-	Link      string     // Example: tcp:///127.0.0.1:6000/<peer_id>
-	EventFeed *EventFeed // EventFeed will handle communication between peers, for example broadcasting a block.
-	Conn      net.Conn
+	ID     string
+	Conn   net.Conn
+	reader *bufio.Reader
+	writer *bufio.Writer
 }
 
-func NewPeer(network string, address string) *Peer {
-	peerAddr := fmt.Sprintf("%s", address)
-
-	conn, err := net.Dial(network, peerAddr)
-	if err != nil {
-		log.Panic(err)
+func NewInboundPeer(conn net.Conn) *Peer {
+	return &Peer{
+		ID:     conn.RemoteAddr().String(),
+		Conn:   conn,
+		reader: bufio.NewReader(conn),
+		writer: bufio.NewWriter(conn),
 	}
-	defer conn.Close()
+}
 
-	peerID, err := uuid.NewUUID()
+func NewOutboundPeer(network, host, port string) (*Peer, error) {
+	address := net.JoinHostPort(host, port)
+	conn, err := net.Dial(network, address)
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
-
-	peerLink := CreatePeerLink(address, peerID)
 
 	return &Peer{
-		Link:      peerLink,
-		EventFeed: &EventFeed{},
-		Conn:      conn,
+		ID:     conn.RemoteAddr().String(), // remote node
+		Conn:   conn,
+		reader: bufio.NewReader(conn),
+		writer: bufio.NewWriter(conn),
+	}, nil
+}
+
+func (p *Peer) Send(msg *Message) error {
+	_, err := fmt.Fprintf(p.writer, "%s %s", msg.Type, msg.Data)
+	if err != nil {
+		return err
 	}
+	return p.writer.Flush()
 }
