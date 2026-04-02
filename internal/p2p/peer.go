@@ -2,11 +2,8 @@ package p2p
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"log"
 	"net"
-	"strings"
 )
 
 // A peer represents a single connection to another node
@@ -47,7 +44,7 @@ func NewOutboundPeer(network, host, port string) (*Peer, error) {
 // Send a message from specific peer.
 // See message.go for msg implementation.
 func (p *Peer) Send(msg *Message) error {
-	_, err := fmt.Fprintf(p.writer, "%s\n", msg)
+	_, err := fmt.Fprintf(p.writer, "%s %s\n", msg.Type, msg.Data)
 	if err != nil {
 		return err
 	}
@@ -63,20 +60,11 @@ type peerJson struct {
 }
 
 // PeerToJson converts a given peer into a json string.
-func PeerToJson(p *Peer) string {
-	host := strings.Split(p.Conn.RemoteAddr().String(), ":")[0]
-	port := strings.Split(p.Conn.RemoteAddr().String(), ":")[1]
-
-	data := &peerJson{
+func PeerToJson(p *Peer) peerJson {
+	host, port, _ := net.SplitHostPort(p.ID)
+	return peerJson{
 		ID:   p.ID,
 		Host: host,
 		Port: port,
 	}
-
-	j, err := json.Marshal(data)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return string(j)
 }

@@ -124,7 +124,7 @@ Behavior:
 
 ---
 
-### 3) Run FVM (prototype)
+### 3) Run FVM 
 
 ```bash
 ./cli/fvm --file <contract.fab> [--gas 100000] [--debug]
@@ -138,7 +138,7 @@ Behavior:
 
 ---
 
-### 4) `node` command status
+### 4) `node` command
 
 Terminal (A)
   Start FABNET server using the following command
@@ -146,13 +146,37 @@ Terminal (A)
 ./cli/fabnet --ipaddr <ip> --port <port>
 ```
 
+Output
+```bash
+2026/04/02 16:27:33 [FABNET] Server started on <ip>:<port>
+```
+
 Terminal (B)
-  Test the connection as a simulated peer
+  Test the connection as a simulated peer.
   NOTE: Later, we will have peer discovery that downloads a list of 
         known peers on the network.
-
 ```bash
 ./cli/fabnet --ipaddr <ip> --port <port> --connect <server-ip>:<server-port>
+```
+
+Output
+```bash
+2026/04/02 16:27:39 [FABNET] Peer connected with address 127.0.0.1:33848
+```
+
+You can further testing by writing "PING"
+```bash
+> PING
+```
+
+Server output
+```bash
+2026/04/02 16:27:41 PING from 127.0.0.1:33848
+```
+
+The server should reply with
+```bash
+> [From <ip>:<port>] PONG
 ```
 
 ## Typical local flow
