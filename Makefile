@@ -8,11 +8,7 @@ FABNET  := $(BINDIR)/fabnet
 
 .PHONY: all clean
 
-all: node fvm account chain fabnet
-
-node:
-	@mkdir -p $(BINDIR)
-	go build -o $(NODE) ./cmd/node
+all: fvm account chain fabnet
 
 chain:
 	@mkdir -p $(BINDIR)

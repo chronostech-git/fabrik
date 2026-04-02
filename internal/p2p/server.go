@@ -21,6 +21,8 @@ func StartServer(address string, manager *PeerManager) {
 			continue
 		}
 
+		log.Println("[FABNET] Peer connected with address", conn.RemoteAddr())
+
 		peer := NewInboundPeer(conn)
 		manager.AddPeer(peer)
 

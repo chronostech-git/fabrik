@@ -12,7 +12,6 @@ cmd/
   chain/     # chain execution CLI (loads genesis, appends test block)
   fvm/       # virtual machine runner CLI
   fabnet/    # The server for p2p communications
-  node/      # very early stages of development 
 
 internal/
   accounts/
@@ -57,12 +56,10 @@ This creates binaries in `./cli`:
 - `cli/chain`
 - `cli/fabnet`
 - `cli/fvm`
-- `cli/node`
 
 Other available make targets:
 
 ```bash
-make node
 make chain
 make fvm
 make account
@@ -143,24 +140,19 @@ Behavior:
 
 ### 4) `node` command status
 
-Start a fabnet node server
+Terminal (A)
+  Start FABNET server using the following command
 ```bash
 ./cli/fabnet --ipaddr <ip> --port <port>
 ```
 
-Output
-```bash
-2026/04/02 11:57:27 [FABNET] Server starting... You may now connect using cli/node!
-```
+Terminal (B)
+  Test the connection as a simulated peer
+  NOTE: Later, we will have peer discovery that downloads a list of 
+        known peers on the network.
 
-Connect to server as a peer
 ```bash
-./cli/node --connect <ip>:<port>
-```
-
-Output
-```bash
-2026/04/02 11:58:03 [NODE] Dialing peer 127.0.0.1:5000... 
+./cli/fabnet --ipaddr <ip> --port <port> --connect <server-ip>:<server-port>
 ```
 
 ## Typical local flow
