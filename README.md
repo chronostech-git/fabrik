@@ -2,16 +2,7 @@
 
 Fabrik is an experimental blockchain project written in Go. It includes foundational components for wallets, genesis generation, chain persistence, account modeling, and an early virtual machine (FVM).
 
-> **Status:** early-stage / experimental. This repository is not production-ready.
-
-## What this project currently includes
-
-- Wallet generation and key storage (`cmd/wallet`)
-- Genesis file creation (`cmd/genesis`)
-- A chain runner that loads genesis and writes blocks (`cmd/chain`)
-- Basic account creation flow for external and contract account types (`cmd/account`)
-- A prototype VM pipeline (parse → compile → execute) via `cmd/fvm`
-- Internal packages for blockchain, state, storage, serialization, cryptography, networking scaffolding, and types
+> **Status:** early-stage / experimental. This repository is not production-ready. 
 
 ## Repository layout
 
@@ -20,6 +11,7 @@ cmd/
   account/   # account CLI
   chain/     # chain execution CLI (loads genesis, appends test block)
   fvm/       # virtual machine runner CLI
+  fabnet/    # The server for p2p communications
   node/      # very early stages of development 
 
 internal/
@@ -46,10 +38,10 @@ scripts/
 
 Primary module dependencies:
 
-- `github.com/alexflint/go-arg`
-- `github.com/holiman/uint256`
-- `github.com/syndtr/goleveldb`
-- `golang.org/x/crypto`
+github.com/alexflint/go-arg v1.6.1
+github.com/holiman/uint256 v1.3.2
+github.com/syndtr/goleveldb v1.0.0
+golang.org/x/crypto v0.49.0
 
 ## Build
 
@@ -61,10 +53,11 @@ make
 
 This creates binaries in `./cli`:
 
-- `cli/genesis`
-- `cli/node`
-- `cli/fvm`
 - `cli/account`
+- `cli/chain`
+- `cli/fabnet`
+- `cli/fvm`
+- `cli/node`
 
 Other available make targets:
 
@@ -73,6 +66,7 @@ make node
 make chain
 make fvm
 make account
+make fabnet
 make clean
 ```
 
@@ -161,12 +155,12 @@ Output
 
 Connect to server as a peer
 ```bash
-./cli/node --fabnet <ip>:<port>
+./cli/node --connect <ip>:<port>
 ```
 
 Output
 ```bash
-2026/04/02 11:58:03 [NODE] Dialing peer 127.0.0.1:5000...
+2026/04/02 11:58:03 [NODE] Dialing peer 127.0.0.1:5000... 
 ```
 
 ## Typical local flow
@@ -176,6 +170,8 @@ make
 ./cli/wallet --datadir ./data
 ./cli/chain --datadir ./data --new [--dump] [--memory]
 ./cli/account --datadir ./data --type external
+./cli/node --connect <ip>:<port>
+./cli/fabnet --ipaddr <ip> --port <port>
 ```
 
 ## Development notes

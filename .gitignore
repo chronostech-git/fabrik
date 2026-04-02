@@ -2,6 +2,7 @@
 /fabrik-cli
 /configs
 /api
+/cli
 
 index.html
 github_auth.txt
