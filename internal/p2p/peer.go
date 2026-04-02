@@ -14,6 +14,8 @@ type Peer struct {
 	writer *bufio.Writer
 }
 
+// Create a new "inbound" peer.
+// An inbound peer uses a RemoteAddr (remote network address) if known.
 func NewInboundPeer(conn net.Conn) *Peer {
 	return &Peer{
 		ID:     conn.RemoteAddr().String(),
@@ -23,6 +25,7 @@ func NewInboundPeer(conn net.Conn) *Peer {
 	}
 }
 
+// Create an "outbound" peer.
 func NewOutboundPeer(network, host, port string) (*Peer, error) {
 	address := net.JoinHostPort(host, port)
 	conn, err := net.Dial(network, address)
@@ -38,8 +41,10 @@ func NewOutboundPeer(network, host, port string) (*Peer, error) {
 	}, nil
 }
 
+// Send a message from specific peer.
+// See message.go for msg implementation.
 func (p *Peer) Send(msg *Message) error {
-	_, err := fmt.Fprintf(p.writer, "%s %s", msg.Type, msg.Data)
+	_, err := fmt.Fprintf(p.writer, "%s %s\n", msg.Type, msg.Data)
 	if err != nil {
 		return err
 	}

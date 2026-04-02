@@ -149,14 +149,24 @@ Behavior:
 
 ### 4) `node` command status
 
-Start a node server
+Start a fabnet node server
 ```bash
-./cli/node --boot <port> 
+./cli/fabnet --ipaddr <ip> --port <port>
+```
+
+Output
+```bash
+2026/04/02 11:57:27 [FABNET] Server starting... You may now connect using cli/node!
 ```
 
 Connect to server as a peer
 ```bash
-./cli/node --peer
+./cli/node --fabnet <ip>:<port>
+```
+
+Output
+```bash
+2026/04/02 11:58:03 [NODE] Dialing peer 127.0.0.1:5000...
 ```
 
 ## Typical local flow
