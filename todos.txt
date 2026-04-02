@@ -1,14 +1,14 @@
 Updated: 04/02/26
 
 TODO (done.): Add more P2P logic
-    TODO: 1. Add disk manager
+    TODO (done.): 1. Add disk manager
     TODO (done.): 2. Cleaner way of running cli/node
 
 TODO (done.): Comment P2P/ folder files  
 
 TODO (done.): Add a logger 
 
-TODO: Fix .gitignore not removing new entries 
+TODO (done.): Fix .gitignore not removing new entries 
 
 TODO (tbd...): Add consensus/ folder & implement some logic there. 
     NOTE: Do this after a solid P2P/ folder is implemented

@@ -13,9 +13,10 @@ import (
 )
 
 var args struct {
-	Host  string   `arg:"--ipaddr" help:"host to bind the server" default:"127.0.0.1"`
-	Port  string   `arg:"--port,required" help:"port to bind the server"`
-	Peers []string `arg:"--connect,separate" help:"peer addresses to connect to, e.g., 127.0.0.1:8000"`
+	DataDir string   `arg:"required" help:"data directory where all persistent data is stored."`
+	Host    string   `arg:"--ipaddr" help:"host to bind the server" default:"127.0.0.1"`
+	Port    string   `arg:"--port,required" help:"port to bind the server"`
+	Peers   []string `arg:"--connect,separate" help:"peer addresses to connect to, e.g., 127.0.0.1:8000"`
 }
 
 func handleIncoming(peer *p2p.Peer) {
@@ -33,6 +34,8 @@ func handleIncoming(peer *p2p.Peer) {
 
 func main() {
 	arg.MustParse(&args)
+
+	disk := p2p.NewDiskStorage(args.DataDir)
 
 	peermgr := p2p.NewPeerManager()
 	addr := net.JoinHostPort(args.Host, args.Port)
@@ -52,6 +55,10 @@ func main() {
 
 	// Launch listeners for all connected peers
 	for _, peer := range peermgr.Peers {
+		err := disk.WritePeer(peer)
+		if err != nil {
+			log.Panic(err)
+		}
 		go handleIncoming(peer)
 	}
 

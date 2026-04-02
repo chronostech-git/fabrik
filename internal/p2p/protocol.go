@@ -2,8 +2,7 @@ package p2p
 
 import (
 	"bufio"
-
-	"github.com/chronostech-git/fabrik/internal/log"
+	"log"
 )
 
 // HandlePeer handles messages, and filters them based on msg.Type.
@@ -18,13 +17,14 @@ func HandlePeer(peer *Peer, manager *PeerManager) {
 
 		msg, err := ParseMessage(line)
 		if err != nil {
-			log.Error(err.Error())
+			log.Panic(err)
 			continue
 		}
 
 		switch msg.Type {
 
 		case "PING":
+			log.Printf("PING from %s", peer.ID)
 			peer.Send(&Message{"PONG", ""})
 
 		case "TX":
@@ -32,7 +32,6 @@ func HandlePeer(peer *Peer, manager *PeerManager) {
 
 		case "BLOCK":
 			manager.Broadcast(peer, msg)
-
 		}
 	}
 

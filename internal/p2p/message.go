@@ -1,15 +1,17 @@
 package p2p
 
 import (
+	"encoding/json"
 	"errors"
+	"log"
 	"strings"
 )
 
 var ErrInvalidMessage = errors.New("invalid message")
 
 type Message struct {
-	Type string
-	Data string
+	Type string `json:"type"`
+	Data string `json:"data"`
 }
 
 func ParseMessage(line string) (*Message, error) {
@@ -24,4 +26,12 @@ func ParseMessage(line string) (*Message, error) {
 	}
 
 	return msg, nil
+}
+
+func (m *Message) Json() string {
+	j, err := json.Marshal(m)
+	if err != nil {
+		log.Panic(err)
+	}
+	return string(j)
 }
