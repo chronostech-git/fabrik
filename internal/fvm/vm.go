@@ -10,16 +10,15 @@ import (
 )
 
 type VM struct {
-	prog     *Program // Wrapper around "code []byte"
-	pc       int      // Program counter
-	stack    *Stack   // Stack (see stack.go for full implementation code)
-	gas      uint64   // Gas limit and or gas remaining for given contract
+	prog     *Program
+	pc       int
+	stack    *Stack
+	gas      uint64
 	memory   map[uint64]uint256.Int
 	storage  map[uint64]uint256.Int
-	dispatch map[OpCode]func(*VM) error // Function dispatch for different OpCodes
+	dispatch map[OpCode]func(*VM) error
 }
 
-// Create a new virtual machine given a program, account state, and gasLimit
 func New(prog *Program, state *state.AccountState, gasLimit uint64) *VM {
 	vm := &VM{
 		prog:     prog,
@@ -34,75 +33,41 @@ func New(prog *Program, state *state.AccountState, gasLimit uint64) *VM {
 	return vm
 }
 
-// Initialize the dispatch table and set the corresponding functions for each OpCode.
 func (vm *VM) initDispatch() {
+	// STOP
 	vm.dispatch[STOP] = func(vm *VM) error {
 		vm.pc = len(vm.prog.code)
 		return nil
 	}
 
-	vm.dispatch[ADD] = func(vm *VM) error {
-		a := vm.stack.Pop()
-		b := vm.stack.Pop()
-		vm.stack.Push(*uint256.NewInt(0).Add(&a, &b))
-		return nil
-	}
+	// Arithmetic
+	vm.dispatch[ADD] = binaryOp(func(a, b *uint256.Int) *uint256.Int { return uint256.NewInt(0).Add(a, b) })
+	vm.dispatch[SUB] = binaryOp(func(a, b *uint256.Int) *uint256.Int { return uint256.NewInt(0).Sub(a, b) })
+	vm.dispatch[MUL] = binaryOp(func(a, b *uint256.Int) *uint256.Int { return uint256.NewInt(0).Mul(a, b) })
+	vm.dispatch[DIV] = binaryOp(func(a, b *uint256.Int) *uint256.Int { return uint256.NewInt(0).Div(a, b) })
+	vm.dispatch[EXP] = binaryOp(func(a, b *uint256.Int) *uint256.Int { return uint256.NewInt(0).Exp(a, b) })
 
-	vm.dispatch[SUB] = func(vm *VM) error {
-		a := vm.stack.Pop()
-		b := vm.stack.Pop()
-		vm.stack.Push(*uint256.NewInt(0).Sub(&a, &b))
-		return nil
-	}
-
-	vm.dispatch[MUL] = func(vm *VM) error {
-		a := vm.stack.Pop()
-		b := vm.stack.Pop()
-		vm.stack.Push(*uint256.NewInt(0).Mul(&a, &b))
-		return nil
-	}
-
-	vm.dispatch[DIV] = func(vm *VM) error {
-		a := vm.stack.Pop()
-		b := vm.stack.Pop()
-		vm.stack.Push(*uint256.NewInt(0).Div(&a, &b))
-		return nil
-	}
-
-	vm.dispatch[EXP] = func(vm *VM) error {
-		a := vm.stack.Pop()
-		b := vm.stack.Pop()
-		vm.stack.Push(*uint256.NewInt(0).Exp(&a, &b))
-		return nil
-	}
-
-	// PUSH1–PUSH32
+	// PUSH1..PUSH32
 	for i := 0; i < 32; i++ {
-		pushOp := 0x12 + i
 		pushN := i + 1
-		vm.dispatch[OpCode(pushOp)] = func(vm *VM) error {
-			if vm.pc+pushN > len(vm.prog.code) {
-				return fmt.Errorf("invalid PUSH at pc %d", vm.pc-1)
+		pushOp := OpCode(0x12 + i)
+		vm.dispatch[pushOp] = func(n int) func(*VM) error {
+			return func(vm *VM) error {
+				if vm.pc+n > len(vm.prog.code) {
+					return fmt.Errorf("invalid PUSH at pc %d", vm.pc-1)
+				}
+				val := uint256.NewInt(0)
+				val.SetBytes(vm.prog.code[vm.pc : vm.pc+n])
+				vm.stack.Push(*val)
+				vm.pc += n
+				return nil
 			}
-			val := uint256.NewInt(0)
-			val.SetBytes(vm.prog.code[vm.pc : vm.pc+pushN])
-			vm.stack.Push(*val)
-			vm.pc += pushN
-			return nil
-		}
+		}(pushN)
 	}
 
-	vm.dispatch[POP] = func(vm *VM) error {
-		vm.stack.Pop()
-		return nil
-	}
-
-	vm.dispatch[DUP] = func(vm *VM) error {
-		val := vm.stack.Peek()
-		vm.stack.Push(*val)
-		return nil
-	}
-
+	// Stack
+	vm.dispatch[POP] = func(vm *VM) error { vm.stack.Pop(); return nil }
+	vm.dispatch[DUP] = func(vm *VM) error { val := vm.stack.Peek(); vm.stack.Push(*val); return nil }
 	vm.dispatch[SWAP] = func(vm *VM) error {
 		a := vm.stack.Pop()
 		b := vm.stack.Pop()
@@ -111,12 +76,12 @@ func (vm *VM) initDispatch() {
 		return nil
 	}
 
+	// Control flow
 	vm.dispatch[JMP] = func(vm *VM) error {
 		addr := vm.stack.Pop()
 		vm.pc = int(addr.Uint64())
 		return nil
 	}
-
 	vm.dispatch[JMPI] = func(vm *VM) error {
 		addr := vm.stack.Pop()
 		cond := vm.stack.Pop()
@@ -126,13 +91,13 @@ func (vm *VM) initDispatch() {
 		return nil
 	}
 
+	// Memory / Storage
 	vm.dispatch[MSTORE] = func(vm *VM) error {
 		addr := vm.stack.Pop()
 		val := vm.stack.Pop()
 		vm.memory[addr.Uint64()] = val
 		return nil
 	}
-
 	vm.dispatch[MLOAD] = func(vm *VM) error {
 		addr := vm.stack.Pop()
 		val, ok := vm.memory[addr.Uint64()]
@@ -142,14 +107,12 @@ func (vm *VM) initDispatch() {
 		vm.stack.Push(val)
 		return nil
 	}
-
 	vm.dispatch[SSTORE] = func(vm *VM) error {
 		addr := vm.stack.Pop()
 		val := vm.stack.Pop()
 		vm.storage[addr.Uint64()] = val
 		return nil
 	}
-
 	vm.dispatch[SLOAD] = func(vm *VM) error {
 		addr := vm.stack.Pop()
 		val, ok := vm.storage[addr.Uint64()]
@@ -160,6 +123,7 @@ func (vm *VM) initDispatch() {
 		return nil
 	}
 
+	// Crypto
 	vm.dispatch[SHA256] = func(vm *VM) error {
 		val := vm.stack.Pop()
 		buf := val.Bytes()
@@ -168,18 +132,36 @@ func (vm *VM) initDispatch() {
 		return nil
 	}
 
-	vm.dispatch[ADDRESS] = func(vm *VM) error {
-		vm.stack.Push(*uint256.NewInt(0))
-		return nil
-	}
+	// Environment / System
+	vm.dispatch[ADDRESS] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[BALANCE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[CALLER] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[ORIGIN] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[CALLVALUE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[CALLDATALOAD] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[CALLDATASIZE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[CALLDATACOPY] = func(vm *VM) error { return nil }
+	vm.dispatch[CODESIZE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[CODECOPY] = func(vm *VM) error { return nil }
+	vm.dispatch[GASPRICE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[EXTCODESIZE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[EXTCODECOPY] = func(vm *VM) error { return nil }
+	vm.dispatch[RETURNDATASIZE] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+	vm.dispatch[RETURNDATACOPY] = func(vm *VM) error { return nil }
+	vm.dispatch[EXTCODEHASH] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
+}
 
-	vm.dispatch[CALLER] = func(vm *VM) error {
-		vm.stack.Push(*uint256.NewInt(0))
+// Helper for arithmetic ops
+func binaryOp(fn func(a, b *uint256.Int) *uint256.Int) func(vm *VM) error {
+	return func(vm *VM) error {
+		a := vm.stack.Pop()
+		b := vm.stack.Pop()
+		vm.stack.Push(*fn(&a, &b))
 		return nil
 	}
 }
 
-// burnGas helper
+// Burn gas
 func (vm *VM) burnGas(amount uint64) error {
 	if vm.gas < amount {
 		return fmt.Errorf("out of gas")
@@ -188,15 +170,14 @@ func (vm *VM) burnGas(amount uint64) error {
 	return nil
 }
 
-// sha256 helper
+// SHA256 helper
 func sha256Sum(data []byte) []byte {
 	h := sha256.New()
 	h.Write(data)
 	return h.Sum(nil)
 }
 
-// Run the Virtual Machine assuming it has been given the nessecary components.
-// Create the VM -> Parse a .fab file -> Compile the parsed instructions -> call vm.Run().
+// Run the VM
 func (vm *VM) Run() error {
 	for vm.pc < len(vm.prog.code) {
 		op := OpCode(vm.prog.code[vm.pc])
@@ -215,7 +196,19 @@ func (vm *VM) Run() error {
 	return nil
 }
 
-// Debug functions below
+func (vm *VM) PrintContractAddress(creator []byte) {
+	addrHex, err := DeriveContractAddressHex(creator, 0)
+	if err != nil {
+		log.Panic(err)
+	}
+	fmt.Println("contract address:", addrHex)
+}
+
+func (vm *VM) GasRemaining() uint64 {
+	return vm.gas
+}
+
+// Debug helpers
 func (vm *VM) PrintStackData() {
 	fmt.Println("stack:", vm.stack.data)
 }

@@ -1,14 +1,39 @@
-Updated: 04/02/26
+Updated on 04/02/2026
 
-TODO (done.): Add more P2P logic
-    TODO (done.): 1. Add disk manager
-    TODO (done.): 2. Cleaner way of running cli/node
+What was done today (04/02/2026)
 
-TODO (done.): Comment P2P/ folder files  
+- README is up-to-date (mostly)
 
-TODO (done.): Add a logger 
+- Complete re doing of the staking logic 
+    1. See internal/blockchain/deposit.go for more in-depth look at changes
+    2. Added stake receipt which is printed upon using --stake option when creating an account
+    3. A deposit contract is ran using FVM when a soon-to-be validator stakes their fab
+    4. If a contract account is somehow not found when updating the account state, it will be 
+       created and added to the account state, to then be updated with the stake amount value.
 
-TODO (done.): Fix .gitignore not removing new entries 
+- Added a ton more OpCodes to Fabrik Virtual Machine including but not limited to
+    1.  PUSH1 through PUSH32
+    2.  ADDRESS         OpCode = 0x30
+	3.  BALANCE         OpCode = 0x31
+	4.  ORIGIN          OpCode = 0x32
+	5.  CALLER          OpCode = 0x33
+	6.  CALLVALUE       OpCode = 0x34
+	7.  CALLDATALOAD    OpCode = 0x35
+	8.  CALLDATASIZE    OpCode = 0x36
+	9.  CALLDATACOPY    OpCode = 0x37
+	10. CODESIZE        OpCode = 0x38
+	11. CODECOPY        OpCode = 0x39
+	12. GASPRICE        OpCode = 0x3a
+	13. EXTCODESIZE     OpCode = 0x3b
+	14. EXTCODECOPY     OpCode = 0x3c
+	15. RETURNDATASIZE  OpCode = 0x3d
+	16. RETURNDATACOPY  OpCode = 0x3e
+	17. EXTCODEHASH     OpCode = 0x3f
 
-TODO (tbd...): Add consensus/ folder & implement some logic there. 
-    NOTE: Do this after a solid P2P/ folder is implemented
+- cli/account has new params (not required unless becoming a validator)
+    1. --stake <amount>
+    2. --gas   <gaslimit>
+    3. --debug // this is for FVM contract execution (more specifically, the deposit contract)
+
+- Rewrite of the P2P module (see README.md for more information)
+

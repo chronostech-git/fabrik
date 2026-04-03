@@ -102,8 +102,9 @@ func ParseLines(lines []string) ([]Instruction, error) {
 			inst.Arg = parts[1]
 		}
 
-		if inst.OpCode == "PUSH" && inst.Arg == "" {
-			return nil, fmt.Errorf("line %d: PUSH requires an argument", i+1)
+		// Validate argument for PUSH1..PUSH32
+		if strings.HasPrefix(op, "PUSH") && inst.Arg == "" {
+			return nil, fmt.Errorf("line %d: %s requires an argument", i+1, op)
 		}
 
 		instructions = append(instructions, inst)

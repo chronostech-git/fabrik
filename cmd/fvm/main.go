@@ -11,10 +11,11 @@ import (
 )
 
 var args struct {
-	File  string `arg:"--file" help:"Smart contract file (.fab)"`
-	Run   string `arg:"--run" help:"Smart contract bytecode hex"`
-	Debug bool   `arg:"--debug" help:"Print debug info"`
-	Gas   int    `arg:"--gas" help:"Gas limit" default:"100000"`
+	File   string `arg:"--file" help:"Smart contract file (.fab)"`
+	Caller string `arg:"--caller" help:"Your key address"`
+	Run    string `arg:"--run" help:"Smart contract bytecode hex"`
+	Debug  bool   `arg:"--debug" help:"Print debug info"`
+	Gas    int    `arg:"--gas" help:"Gas limit" default:"100000"`
 }
 
 func runSmartContractFromFile(
@@ -41,9 +42,15 @@ func runSmartContractFromFile(
 		return err
 	}
 
-	fmt.Println("Compiled bytecode:", hex.EncodeToString(bytecode))
-
 	if debug {
+		fmt.Println("Compiled bytecode:", hex.EncodeToString(bytecode))
+
+		caller, err := hex.DecodeString(args.Caller)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		vm.PrintContractAddress(caller)
 		vm.PrintStackData()
 		vm.PrintDisasm()
 		vm.PrintGasRemaining()

@@ -1,19 +1,19 @@
-; --- deposit() ---
+# deposit.fab
+# Simple deposit contract for Fabrik VM
 
-CALLER        ; stack: [caller]
+START:
+    # Load sender address
+    CALLER          # Push sender address onto the stack
 
-DUP           ; stack: [caller caller]
-SHA256        ; stack: [caller key]
+    # Load deposited value
+    CALLVALUE       # Push the value of the call onto the stack
 
-DUP           ; stack: [caller key key]
-SLOAD         ; stack: [caller key balance]
+    # Compute storage slot for sender (e.g., hash of address)
+    SHA256          # Compute a simple hash (simulate storage slot)
+    
+    # Store deposited value in sender's storage
+    SSTORE          # storage[hash(address)] = value
 
-PUSH 0
-MLOAD         ; stack: [caller key balance amount]
-
-ADD           ; stack: [caller key newBalance]
-
-SWAP          ; stack: [caller newBalance key]
-SSTORE        ; storage[key] = newBalance
-
-STOP
+    # Optionally return the stored value
+    SLOAD           # reload the stored value
+    STOP            # end execution

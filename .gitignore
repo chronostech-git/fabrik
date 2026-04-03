@@ -3,6 +3,7 @@
 /configs
 /api
 /cli
+/contracts
 
 index.html
 github_auth.txt

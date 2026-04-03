@@ -11,14 +11,19 @@ import (
 	"github.com/chronostech-git/fabrik/internal/accounts/external"
 	"github.com/chronostech-git/fabrik/internal/blockchain"
 	"github.com/chronostech-git/fabrik/internal/crypto"
+	"github.com/chronostech-git/fabrik/internal/fvm"
 	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/chronostech-git/fabrik/internal/storage/keystore"
+	"github.com/chronostech-git/fabrik/internal/types"
 )
 
 var args struct {
 	DataDir    string `arg:"required"`
-	Type       string `arg:"--type,required"` // external or contract
-	WithWallet bool   `arg:"--wallet"`        // If true, a new wallet will be created. Otherwise, loadWalletAndKey is used.
+	Type       string `arg:"--type,required"`                                             // external or contract
+	WithWallet bool   `arg:"--wallet"`                                                    // If true, a new wallet will be created. Otherwise, loadWalletAndKey is used.
+	Stake      int    `arg:"--stake" default:"0"`                                         // If present, it will set the stake amount (must be >= 32 fab)
+	Gas        int    `arg:"--gas" help:"Gas limit for calling staking deposit contract"` // Gas limit for calling staking deposit contract
+	Debug      bool   `arg:"--debug" help:"Debug mode for FVM deposit contract execution"`
 }
 
 func createNewWallet(ks keystore.Store) (*blockchain.Wallet, *crypto.Key) {
@@ -66,6 +71,45 @@ func main() {
 	}
 
 	state.AddAccount(account)
+
+	if args.Stake != 0 {
+		codeHexToBytes, err := fvm.HexToBytes("333455424400")
+		if err != nil {
+			log.Panic(err)
+		}
+
+		stakeToAmount := types.NewAmount(int64(args.Stake))
+		depositTx, gasRemaining, err := blockchain.CreateStakeDepositTransaction(
+			account.Address(),
+			stakeToAmount,
+			state,
+			uint64(args.Gas),
+			codeHexToBytes,
+			args.Debug,
+		)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		sig, err := key.Sign(depositTx.Hash)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		depositTx.Signature = sig
+
+		gasUsed := args.Gas - int(gasRemaining)
+
+		stakeReceipt := blockchain.NewStakeDepositReceipt(
+			depositTx,
+			int64(gasUsed),
+			blockchain.DepositContractAddress,
+		)
+		log.Printf("NOTE: This account is now allowed to become a validator. Below is your custom Stake Receipt.")
+		fmt.Println()
+		fmt.Println(stakeReceipt.Json())
+		fmt.Println()
+	}
 
 	log.Printf("%s account created using wallet %s", strings.ToUpper(args.Type), key.Address.String())
 
