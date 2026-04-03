@@ -114,13 +114,15 @@ Finished.
 ### 2) Create an account record
 
 ```bash
-./cli/account <datadir> --type <external|contract>
+./cli/account <datadir> --type <external|contract> [--wallet] --stake 0 --gas 0 [--debug]
 ```
 
 Behavior:
 - Loads wallet key from datadir keystore
 - Creates either an external or contract account with that address
 - Adds it to in-memory account state
+- If specified (not 0), the --stake option will allow for easy validator creation. 
+- NOTE: If the --stake option is 0, the --gas option must also be specified at 0.
 
 ---
 
@@ -183,7 +185,6 @@ The server should reply with
 
 ```bash
 make
-./cli/wallet --datadir ./data
 ./cli/chain --datadir ./data --new [--dump] [--memory]
 ./cli/account --datadir ./data --type external
 ./cli/node --connect <ip>:<port>

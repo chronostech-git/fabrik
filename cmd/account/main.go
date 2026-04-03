@@ -19,48 +19,40 @@ import (
 
 var args struct {
 	DataDir    string `arg:"required"`
-	Type       string `arg:"--type,required"`                                             // external or contract
-	WithWallet bool   `arg:"--wallet"`                                                    // If true, a new wallet will be created. Otherwise, loadWalletAndKey is used.
-	Stake      int    `arg:"--stake" default:"0"`                                         // If present, it will set the stake amount (must be >= 32 fab)
-	Gas        int    `arg:"--gas" help:"Gas limit for calling staking deposit contract"` // Gas limit for calling staking deposit contract
+	Type       string `arg:"--type,required"`     // external or contract
+	WithWallet bool   `arg:"--wallet"`            // Create a new wallet if true
+	Stake      int    `arg:"--stake" default:"0"` // Stake amount (>=32 fab)
+	GasLimit   int    `arg:"--gas" help:"Gas limit for calling staking deposit contract"`
 	Debug      bool   `arg:"--debug" help:"Debug mode for FVM deposit contract execution"`
 }
 
-func createNewWallet(ks keystore.Store) (*blockchain.Wallet, *crypto.Key) {
-	wallet := blockchain.NewWallet(ks)
-	key := wallet.Key
-	return wallet, key
+func createWallet(store keystore.Store) (*blockchain.Wallet, *crypto.Key) {
+	w := blockchain.NewWallet(store)
+	return w, w.Key
 }
 
-func loadWalletAndKey(ks keystore.Store) (*blockchain.Wallet, *crypto.Key) {
-	key, err := ks.GetKey()
+func loadWallet(store keystore.Store) (*blockchain.Wallet, *crypto.Key) {
+	key, err := store.GetKey()
 	if err != nil {
 		log.Panic(err)
 	}
-	return &blockchain.Wallet{
-		KeyStore: ks,
-		Key:      key,
-	}, nil
+	return &blockchain.Wallet{KeyStore: store, Key: key}, key
 }
 
 func main() {
 	arg.MustParse(&args)
 
+	store := keystore.NewFileStore(args.DataDir)
+	wallet, key := func() (*blockchain.Wallet, *crypto.Key) {
+		if args.WithWallet {
+			return createWallet(store)
+		}
+		return loadWallet(store)
+	}()
+
 	state := state.NewAccountState()
 
 	var account accounts.Account
-	var store keystore.Store
-	var key *crypto.Key
-	var wallet *blockchain.Wallet
-
-	store = keystore.NewFileStore(args.DataDir)
-
-	if args.WithWallet {
-		wallet, key = createNewWallet(store)
-	} else {
-		wallet, key = loadWalletAndKey(store)
-	}
-
 	switch args.Type {
 	case "contract":
 		account = contract.NewAccount(key.Address)
@@ -69,22 +61,22 @@ func main() {
 	default:
 		log.Panicf("unknown account type: %s", args.Type)
 	}
-
 	state.AddAccount(account)
 
-	if args.Stake != 0 {
-		codeHexToBytes, err := fvm.HexToBytes("333455424400")
+	// Handle staking deposit if requested
+	if args.Stake > 0 {
+		codeBytes, err := fvm.HexToBytes("333455424400")
 		if err != nil {
 			log.Panic(err)
 		}
 
-		stakeToAmount := types.NewAmount(int64(args.Stake))
+		stakeAmount := types.NewAmount(int64(args.Stake))
 		depositTx, gasRemaining, err := blockchain.CreateStakeDepositTransaction(
 			account.Address(),
-			stakeToAmount,
+			stakeAmount,
 			state,
-			uint64(args.Gas),
-			codeHexToBytes,
+			uint64(args.GasLimit),
+			codeBytes,
 			args.Debug,
 		)
 		if err != nil {
@@ -95,24 +87,16 @@ func main() {
 		if err != nil {
 			log.Panic(err)
 		}
-
 		depositTx.Signature = sig
 
-		gasUsed := args.Gas - int(gasRemaining)
+		gasUsed := args.GasLimit - int(gasRemaining)
+		stakeReceipt := blockchain.NewStakeDepositReceipt(depositTx, int64(gasUsed), blockchain.DepositContractAddress)
 
-		stakeReceipt := blockchain.NewStakeDepositReceipt(
-			depositTx,
-			int64(gasUsed),
-			blockchain.DepositContractAddress,
-		)
-		log.Printf("NOTE: This account is now allowed to become a validator. Below is your custom Stake Receipt.")
-		fmt.Println()
+		log.Println("NOTE: This account is now allowed to become a validator. Below is your custom Stake Receipt:")
 		fmt.Println(stakeReceipt.Json())
-		fmt.Println()
 	}
 
 	log.Printf("%s account created using wallet %s", strings.ToUpper(args.Type), key.Address.String())
-
 	fmt.Println()
 	if wallet != nil {
 		log.Println("Public key:", wallet.Key.PublicKeyHex())
