@@ -37,3 +37,12 @@ What was done today (04/02/2026)
 
 - Rewrite of the P2P module (see README.md for more information)
 
+updated: 04/03/26
+
+TODO Make sure readme is up to date 
+
+TODO Make custom logger more feature rich (file logging, better format etc...)
+
+TODO Work on P2P functionality
+
+TODO More blockchain logic and state updates
