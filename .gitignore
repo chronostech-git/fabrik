@@ -4,6 +4,7 @@
 /api
 /cli
 /contracts
+/data
 
 index.html
 github_auth.txt
