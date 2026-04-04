@@ -140,17 +140,17 @@ Behavior:
 
 ---
 
-### 4) `node` command
+### 4) `fabnet` command
 
 Terminal (A)
   Start FABNET server using the following command
 ```bash
-./cli/fabnet --ipaddr <ip> --port <port>
+./cli/fabnet --ipaddr <server-ip> --port <server-port>
 ```
 
 Output
 ```bash
-2026/04/02 16:27:33 [FABNET] Server started on <ip>:<port>
+2026/04/02 16:27:33 [FABNET] Server started on <server-ip>:<server-port>
 ```
 
 Terminal (B)
@@ -158,7 +158,7 @@ Terminal (B)
   NOTE: Later, we will have peer discovery that downloads a list of 
         known peers on the network.
 ```bash
-./cli/fabnet --ipaddr <ip> --port <port> --connect <server-ip>:<server-port>
+./cli/fabnet --ipaddr <local-ip> --port <different-port> --connect <server-ip>:<server-port>
 ```
 
 Output
@@ -178,17 +178,7 @@ Server output
 
 The server should reply with
 ```bash
-> [From <ip>:<port>] PONG
-```
-
-## Typical local flow
-
-```bash
-make
-./cli/chain --datadir ./data --new [--dump] [--memory]
-./cli/account --datadir ./data --type external
-./cli/node --connect <ip>:<port>
-./cli/fabnet --ipaddr <ip> --port <port>
+> [From <server-ip>:<server-port>] PONG
 ```
 
 ## Development notes

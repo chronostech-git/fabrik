@@ -1,9 +1,8 @@
 package p2p
 
 import (
+	"log"
 	"sync"
-
-	"github.com/chronostech-git/fabrik/internal/log"
 )
 
 type PeerManager struct {
@@ -36,7 +35,7 @@ func (m *PeerManager) RemovePeer(p *Peer) {
 func (m *PeerManager) GetPeer(ID string) *Peer {
 	p, ok := m.Peers[ID]
 	if !ok {
-		log.Error("Peer with ID %s does not exist", ID)
+		log.Panicf("Peer with ID %s does not exist", ID)
 		return nil
 	}
 	return p
