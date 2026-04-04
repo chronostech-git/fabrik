@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"strings"
 
 	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/p2p"
@@ -19,6 +17,7 @@ var args struct {
 	Peers   []string `arg:"--connect,separate" help:"peer addresses to connect to, e.g., 127.0.0.1:8000"`
 }
 
+// handleIncoming continuously reads messages from a peer connection
 func handleIncoming(peer *p2p.Peer) {
 	scanner := bufio.NewScanner(peer.Conn)
 	for scanner.Scan() {
@@ -30,54 +29,62 @@ func handleIncoming(peer *p2p.Peer) {
 		}
 		fmt.Printf("[From %s] %s: %s\n", peer.ID, msg.Type, msg.Data)
 	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("[Peer %s] connection closed with error: %v\n", peer.ID, err)
+	}
 }
 
-func main() {
-	arg.MustParse(&args)
+// startServer launches the TCP server for incoming peer connections
+func startServer(addr string, mgr *p2p.PeerManager, disk *p2p.DiskStorage) {
+	log.Printf("[FABNET] Server started on %s\n", addr)
+	p2p.StartServer(addr, mgr, disk)
+}
 
-	disk := p2p.NewDiskStorage(args.DataDir)
-
-	peermgr := p2p.NewPeerManager()
-	addr := net.JoinHostPort(args.Host, args.Port)
-
-	// Start server
-	go func() {
-		log.Printf("[FABNET] Server started on %s\n", addr)
-		p2p.StartServer(addr, peermgr)
-	}()
-
-	// Connect to any peers specified
-	for _, peerAddr := range args.Peers {
-		if err := p2p.DialPeer(peerAddr, peermgr); err != nil {
-			log.Println("Failed to connect to peer", peerAddr, err)
-		}
-	}
-
-	// Launch listeners for all connected peers
-	for _, peer := range peermgr.Peers {
-		err := disk.WritePeer(peer)
+// connectToPeers dials a list of peer addresses and registers them in the PeerManager
+func connectToPeers(peerAddrs []string, mgr *p2p.PeerManager, disk *p2p.DiskStorage) {
+	for _, addr := range peerAddrs {
+		peer, err := p2p.DialPeer(addr, mgr)
 		if err != nil {
-			log.Panic(err)
+			log.Println("Failed to connect to peer", addr, err)
+			continue
+		}
+		if err := disk.WritePeer(peer); err != nil {
+			log.Println("Failed to save peer to disk:", err)
+		}
+		// Launch message listener
+		go handleIncoming(peer)
+	}
+}
+
+// registerExistingPeers writes all known peers to disk and starts listeners
+func registerExistingPeers(peers map[string]*p2p.Peer, disk *p2p.DiskStorage) {
+	for _, peer := range peers {
+		if err := disk.WritePeer(peer); err != nil {
+			log.Println("Failed to save peer to disk:", err)
+			continue
 		}
 		go handleIncoming(peer)
 	}
+}
 
-	// Interactive CLI
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("> ")
-		text, _ := reader.ReadString('\n')
-		text = strings.TrimSpace(text)
-		if text == "" {
-			continue
-		}
+func main() {
+	// Parse CLI arguments
+	arg.MustParse(&args)
 
-		// Send to all connected peers
-		for _, peer := range peermgr.Peers {
-			err := peer.Send(&p2p.Message{Type: text, Data: ""})
-			if err != nil {
-				log.Println("Send error:", err)
-			}
-		}
-	}
+	// Initialize disk storage and peer manager
+	disk := p2p.NewDiskStorage(args.DataDir)
+	peermgr := p2p.NewPeerManager()
+	addr := net.JoinHostPort(args.Host, args.Port)
+
+	// Start TCP server for incoming connections
+	go startServer(addr, peermgr, disk)
+
+	// Connect to peers passed as CLI arguments
+	connectToPeers(args.Peers, peermgr, disk)
+
+	// Register any peers already in the manager
+	registerExistingPeers(peermgr.Peers, disk)
+
+	// Block forever (or implement a proper signal handler)
+	select {}
 }

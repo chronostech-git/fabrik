@@ -1,11 +1,11 @@
 updated: 04/04/26
 
-TODO Write documentation underneath "docs/" folder
+TODO (done.) Write documentation underneath "docs/" folder
 
 TODO Work in peer functionality.
     TODO Add a better way of identifying peers that is NOT just <ip>:<port>.
-        NOTE: Something like tcp:///0.0.0.0:4989/<UUID>
-    TODO Add peer discovery (including handshakes for connecting with other peers)
+        NOTE: Something like tcp:///<ip>:<port>/<UUID>
+    TODO (done.) Add peer discovery (including handshakes for connecting with other peers)
 
 TODO Gut the entire account system. 
      NOTE: We will still have external & contract accounts. 

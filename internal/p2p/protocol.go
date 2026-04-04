@@ -23,9 +23,15 @@ func HandlePeer(peer *Peer, manager *PeerManager) {
 
 		switch msg.Type {
 
-		case "PING":
-			log.Printf("PING from %s", peer.ID)
-			peer.Send(&Message{"PONG", ""})
+		case "HANDSHAKE":
+			msgData := "[HANDSHAKE] Handshake received"
+			err := SendTo(peer.ID, &Message{
+				Type: "HANDSHAKE",
+				Data: msgData,
+			})
+			if err != nil {
+				log.Panic(err)
+			}
 
 		case "TX":
 			manager.Broadcast(peer, msg)

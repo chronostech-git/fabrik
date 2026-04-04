@@ -8,7 +8,7 @@ import (
 
 // A peer represents a single connection to another node
 type Peer struct {
-	ID     string `json:"id"`
+	ID     string
 	Conn   net.Conn
 	reader *bufio.Reader
 	writer *bufio.Writer
@@ -49,6 +49,28 @@ func (p *Peer) Send(msg *Message) error {
 		return err
 	}
 	return p.writer.Flush()
+}
+
+// SendTo connects to the given address and sends a single message.
+func SendTo(address string, msg *Message) error {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return fmt.Errorf("failed to connect to %s: %w", address, err)
+	}
+	defer conn.Close()
+
+	writer := bufio.NewWriter(conn)
+
+	_, err = fmt.Fprintf(writer, "%s %s\n", msg.Type, msg.Data)
+	if err != nil {
+		return fmt.Errorf("failed to send message to %s: %w", address, err)
+	}
+
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("failed to flush message to %s: %w", address, err)
+	}
+
+	return nil
 }
 
 // For disk file.

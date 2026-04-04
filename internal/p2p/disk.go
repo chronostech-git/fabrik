@@ -21,17 +21,6 @@ func NewDiskStorage(dir string) *DiskStorage {
 	}
 }
 
-func (ds *DiskStorage) createPeerFile() error {
-	file := filepath.Join(ds.Directory, peerFilename) // <datadir>/peers.json
-
-	_, err := os.Create(file)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // WritePeer
 // If a node connects to the network that is not already saved
 // to peers.json, it will write the peer to the disk at <datadir>/peers.json
@@ -59,4 +48,19 @@ func (ds *DiskStorage) WritePeer(p *Peer) error {
 	}
 
 	return nil
+}
+
+func (ds *DiskStorage) LoadPeers() (map[string]peerJson, error) {
+	var peers map[string]peerJson
+
+	file := filepath.Join(ds.Directory, peerFilename)
+
+	data, err := os.ReadFile(file)
+	if err == nil && len(data) > 0 {
+		if err := json.Unmarshal(data, &peers); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal existing peers: %w", err)
+		}
+	}
+
+	return peers, nil
 }
