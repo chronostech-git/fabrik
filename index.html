@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <title>Fabrik</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
+
+*{box-sizing:border-box;}
 
 body{
 margin:0;
 font-family:system-ui,-apple-system,Segoe UI,Roboto;
 background:#0f1117;
 color:#e6edf3;
+line-height:1.7;
 }
 
 .container{
@@ -22,27 +24,66 @@ padding:50px 20px;
 
 .hero{
 text-align:center;
-padding:80px 0;
+padding:90px 20px 60px;
 }
 
 h1{
-font-size:48px;
-margin-bottom:10px;
+font-size:52px;
+margin:0 0 12px;
+letter-spacing:-1px;
+}
+
+h2{
+font-size:24px;
+margin:0 0 16px;
+color:#e6edf3;
+border-bottom:1px solid #21262d;
+padding-bottom:10px;
+}
+
+h3{
+font-size:17px;
+color:#79c0ff;
+margin:28px 0 8px;
+font-family:monospace;
+font-weight:600;
 }
 
 .subtitle{
 color:#9da7b3;
 font-size:18px;
+max-width:560px;
+margin:0 auto 28px;
+}
+
+.badge{
+display:inline-block;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:600;
+background:#21262d;
+color:#9da7b3;
+border:1px solid #30363d;
+margin:4px;
+}
+
+.buttons{
+margin:24px 0 0;
 }
 
 .button{
 display:inline-block;
-padding:12px 24px;
+padding:11px 24px;
 border-radius:8px;
 text-decoration:none;
 font-weight:600;
-margin:10px;
+font-size:15px;
+margin:6px;
+transition:opacity .15s;
 }
+
+.button:hover{opacity:.85;}
 
 .primary{
 background:#3b82f6;
@@ -55,181 +96,384 @@ color:#3b82f6;
 }
 
 section{
-margin-top:60px;
+margin-top:64px;
 }
+
+p{
+color:#c9d1d9;
+margin:0 0 14px;
+}
+
+ul{
+color:#c9d1d9;
+padding-left:24px;
+}
+
+ul li{
+margin-bottom:6px;
+}
+
+a{
+color:#79c0ff;
+text-decoration:none;
+}
+
+a:hover{text-decoration:underline;}
 
 code{
 background:#161b22;
-padding:4px 8px;
+color:#e6edf3;
+padding:3px 7px;
 border-radius:5px;
+font-size:13.5px;
+font-family:'SFMono-Regular',Consolas,monospace;
+border:1px solid #30363d;
 }
 
 pre{
 background:#161b22;
+border:1px solid #30363d;
 padding:20px;
 border-radius:8px;
 overflow:auto;
+font-size:13.5px;
+font-family:'SFMono-Regular',Consolas,monospace;
+line-height:1.6;
+color:#c9d1d9;
+margin:12px 0 0;
+}
+
+pre code{
+background:none;
+border:none;
+padding:0;
+font-size:inherit;
+}
+
+.comment{color:#6e7681;}
+.kw{color:#ff7b72;}
+.flag{color:#79c0ff;}
+.val{color:#a5d6ff;}
+.str{color:#a5d6ff;}
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+margin-top:12px;
+}
+
+th{
+text-align:left;
+padding:10px 14px;
+background:#161b22;
+border:1px solid #30363d;
+color:#9da7b3;
+font-weight:600;
+}
+
+td{
+padding:10px 14px;
+border:1px solid #21262d;
+color:#c9d1d9;
+vertical-align:top;
+}
+
+td:first-child{
+font-family:'SFMono-Regular',Consolas,monospace;
+color:#79c0ff;
+white-space:nowrap;
+}
+
+tr:nth-child(even) td{
+background:#0d1117;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:16px;
+margin-top:12px;
+}
+
+@media(max-width:600px){
+h1{font-size:36px;}
+.grid{grid-template-columns:1fr;}
+}
+
+.card{
+background:#161b22;
+border:1px solid #30363d;
+border-radius:8px;
+padding:20px;
+}
+
+.card h4{
+margin:0 0 8px;
+color:#e6edf3;
+font-size:15px;
+}
+
+.card p{
+margin:0;
+font-size:14px;
+color:#8b949e;
+}
+
+.card .icon{
+font-size:22px;
+margin-bottom:10px;
+}
+
+.note{
+background:#161b22;
+border-left:3px solid #3b82f6;
+padding:12px 16px;
+border-radius:0 6px 6px 0;
+margin:16px 0;
+font-size:14px;
+color:#8b949e;
 }
 
 footer{
 text-align:center;
 margin-top:100px;
+padding:40px 20px;
 color:#6e7681;
+border-top:1px solid #21262d;
+font-size:14px;
 }
 
 </style>
-
 </head>
-
 <body>
 
-<div class="container hero">
-
+<!-- HERO -->
+<div class="hero">
 <h1>Fabrik</h1>
-
-<p class="subtitle">
-An experimental blockchain runtime and virtual machine written in Go.
-</p>
-
+<p class="subtitle">An experimental blockchain runtime and virtual machine written in Go.</p>
 <div>
-
-<a class="button primary" href="https://github.com/chronostech-git/fabrik">
-View on GitHub
-</a>
-
-<a class="button secondary" href="https://github.com/chronostech-git/fabrik/blob/main/README.md">
-Read the README
-</a>
-
+<span class="badge">Go 1.25.8</span>
+<span class="badge">Early Stage</span>
+<span class="badge">Open Source</span>
 </div>
-
-<p style="margin-top:20px;color:#6e7681;">
-Early-stage project — interfaces and commands may change frequently.
-</p>
-
+<div class="buttons">
+<a class="button primary" href="https://github.com/chronostech-git/fabrik">View on GitHub</a>
+<a class="button secondary" href="https://github.com/chronostech-git/fabrik/blob/main/README.md">Read the README</a>
+</div>
+<p style="margin-top:20px;color:#6e7681;font-size:14px;">Interfaces and commands may change frequently — check <a href="https://github.com/chronostech-git/fabrik/blob/main/todos.txt">todos.txt</a> for the latest changes.</p>
 </div>
 
 
 <div class="container">
 
+
+<!-- ABOUT -->
 <section>
-
 <h2>About Fabrik</h2>
-
-<p>
-Fabrik is an experimental blockchain system designed to explore the
-fundamental architecture behind programmable blockchains.
-</p>
-
-<p>
-The project includes foundational components such as wallet generation,
-genesis block creation, persistent chain storage, account modeling,
-and a prototype virtual machine (FVM) for executing compiled bytecode.
-</p>
-
-<p>
-Fabrik is built primarily as a research and experimentation platform
-for understanding blockchain execution environments.
-</p>
-
+<p>Fabrik is a research and experimentation platform for understanding the fundamental architecture behind programmable blockchains. It is built from scratch in Go and provides all the core primitives a blockchain system needs.</p>
+<div class="grid">
+  <div class="card">
+    <div class="icon">⚙️</div>
+    <h4>FVM — Fabrik Virtual Machine</h4>
+    <p>Stack-based VM with its own opcodes, bytecode compiler, gas metering, and contract execution environment.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🔗</div>
+    <h4>Chain</h4>
+    <p>Genesis block creation, coinbase transactions, LevelDB-backed persistent chain storage, and a chain iterator.</p>
+  </div>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h4>Fabnet — P2P Network</h4>
+    <p>Custom peer-to-peer protocol for node communication, peer discovery, and message passing.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🔑</div>
+    <h4>Accounts &amp; Wallet</h4>
+    <p>External and contract account modeling, key generation, keystore management, and staking support.</p>
+  </div>
+</div>
 </section>
 
 
+<!-- LAYOUT -->
 <section>
-
-<h2>Repository Overview</h2>
-
-<p>The project is structured into CLI tools and internal libraries:</p>
-
-<pre><code>
-cmd/
-  wallet
-  chain
-  account
-  fvm
-  node
+<h2>Repository Layout</h2>
+<pre><code>cmd/
+  chain/          <span class="comment">— blockchain execution and genesis CLI</span>
+  account/        <span class="comment">— account creation and staking CLI</span>
+  fvm/            <span class="comment">— virtual machine runner CLI</span>
+  fabnet/         <span class="comment">— P2P server and peer connection CLI</span>
+  wallet/         <span class="comment">— (in progress) wallet/transaction CLI</span>
 
 internal/
-  accounts
-  blockchain
-  crypto
-  fvm
-  network
-  serialize/rlp
-  state
-  storage
-  types
-</code></pre>
+  accounts/       <span class="comment">— account types (external, contract)</span>
+  blockchain/     <span class="comment">— block, chain, genesis, consensus, transactions, wallet</span>
+  crypto/         <span class="comment">— key generation, signing, address derivation</span>
+  fvm/            <span class="comment">— compiler, executor, opcodes, gas, stack</span>
+  p2p/            <span class="comment">— server, peer discovery, dialer, message protocol</span>
+  serialize/rlp/  <span class="comment">— RLP encoding and decoding</span>
+  state/          <span class="comment">— account state and chain state management</span>
+  storage/        <span class="comment">— LevelDB and keystore backends</span>
+  types/          <span class="comment">— shared primitive types (Address, Amount, etc.)</span>
+
+contracts/
+  deposit.fab     <span class="comment">— example FVM contract</span>
+
+scripts/
+  clean.sh        <span class="comment">— remove build artifacts</span>
+  format.sh       <span class="comment">— format Go source</span></code></pre>
+</section>
+
+
+<!-- BUILD -->
+<section>
+<h2>Build</h2>
+<p>Requires <strong>Go 1.25.8+</strong> and <code>make</code>. Build all CLI binaries with:</p>
+<pre><code>make</code></pre>
+<p>Outputs binaries to <code>./cli/</code>: <code>chain</code>, <code>account</code>, <code>fvm</code>, <code>fabnet</code></p>
+<p>Individual targets:</p>
+<pre><code>make chain      <span class="comment"># build chain binary only</span>
+make account    <span class="comment"># build account binary only</span>
+make fvm        <span class="comment"># build fvm binary only</span>
+make fabnet     <span class="comment"># build fabnet binary only</span>
+make deps       <span class="comment"># go mod tidy + download</span>
+make clean      <span class="comment"># remove ./cli directory</span></code></pre>
+</section>
+
+
+<!-- CLI USAGE -->
+<section>
+<h2>CLI Usage</h2>
+
+<h3>chain — Create and Persist a Genesis Block</h3>
+<p>Initializes a new chain in the given data directory. Creates a coinbase transaction, signs it with the keystore key, and writes the genesis block to LevelDB.</p>
+<pre><code>./cli/chain &lt;datadir&gt; <span class="flag">--gaslimit</span> <span class="val">&lt;gaslimit&gt;</span> [<span class="flag">--debug</span>]</code></pre>
+<table>
+<tr><th>Flag</th><th>Required</th><th>Description</th></tr>
+<tr><td>&lt;datadir&gt;</td><td>Yes</td><td>Directory for keystore, genesis, and LevelDB</td></tr>
+<tr><td>--gaslimit</td><td>Yes</td><td>Gas limit for the genesis block</td></tr>
+<tr><td>--debug</td><td>No</td><td>Print full chain state after creation</td></tr>
+</table>
+<pre><code><span class="comment"># Example</span>
+./cli/chain data <span class="flag">--gaslimit</span> <span class="val">1000</span>
+
+<span class="comment"># Output</span>
+2026/04/05 01:39:52 Coinbase transaction signed and verified
+        signer: 0x013bbe45ba4506d5886601d47db697fb823edaf2
+        sig:    0x4c2f44dcd24eeb991af6f379c02eae0c84c2e9532fa71a08a5e...
+        hash:   0xac7327f8b30d32e223276f853899fa6df7b2b84eea92c8b45e96f...
+        valid:  true
+
+2026/04/05 01:39:52 Genesis block created at 1775367592 unix time with hash 0x5adb616b...</code></pre>
+
+
+<h3>account — Create an Account Record</h3>
+<p>Creates a new account (external or contract) in the given data directory. Optionally generates a new wallet and runs the staking deposit contract via FVM.</p>
+<pre><code>./cli/account &lt;datadir&gt; <span class="flag">--type</span> <span class="val">&lt;external|contract&gt;</span> [<span class="flag">--wallet</span>] [<span class="flag">--stake</span> <span class="val">&lt;n&gt;</span>] [<span class="flag">--gas</span> <span class="val">&lt;limit&gt;</span>] [<span class="flag">--debug</span>]</code></pre>
+<table>
+<tr><th>Flag</th><th>Required</th><th>Description</th></tr>
+<tr><td>&lt;datadir&gt;</td><td>Yes</td><td>Data directory for keystore and account state</td></tr>
+<tr><td>--type</td><td>Yes</td><td>Account type: <code>external</code> or <code>contract</code></td></tr>
+<tr><td>--wallet</td><td>No</td><td>Generate a new wallet keypair in the data directory</td></tr>
+<tr><td>--stake</td><td>No</td><td>Stake amount (default: 0)</td></tr>
+<tr><td>--gas</td><td>No</td><td>Gas limit for the staking deposit contract execution</td></tr>
+<tr><td>--debug</td><td>No</td><td>Print FVM debug trace during deposit contract execution</td></tr>
+</table>
+<pre><code><span class="comment"># Create an external account with a fresh wallet</span>
+./cli/account data <span class="flag">--type</span> <span class="val">external</span> <span class="flag">--wallet</span>
+
+<span class="comment"># Create a contract account with stake</span>
+./cli/account data <span class="flag">--type</span> <span class="val">contract</span> <span class="flag">--stake</span> <span class="val">32</span> <span class="flag">--gas</span> <span class="val">100000</span>
+
+<span class="comment"># Debug FVM execution during staking</span>
+./cli/account data <span class="flag">--type</span> <span class="val">external</span> <span class="flag">--stake</span> <span class="val">32</span> <span class="flag">--gas</span> <span class="val">100000</span> <span class="flag">--debug</span></code></pre>
+
+
+<h3>fvm — Run the Fabrik Virtual Machine</h3>
+<p>Executes a <code>.fab</code> smart contract file or raw bytecode hex using the FVM. Supports gas metering, debug tracing, and a caller address for contract context.</p>
+<pre><code>./cli/fvm [<span class="flag">--file</span> <span class="val">&lt;contract.fab&gt;</span>] [<span class="flag">--run</span> <span class="val">&lt;hex&gt;</span>] [<span class="flag">--caller</span> <span class="val">&lt;address&gt;</span>] [<span class="flag">--gas</span> <span class="val">&lt;limit&gt;</span>] [<span class="flag">--debug</span>]</code></pre>
+<table>
+<tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+<tr><td>--file</td><td>—</td><td>Path to a <code>.fab</code> source file</td></tr>
+<tr><td>--run</td><td>—</td><td>Raw bytecode as a hex string</td></tr>
+<tr><td>--caller</td><td>—</td><td>Sender address for contract context</td></tr>
+<tr><td>--gas</td><td>100000</td><td>Gas limit for execution</td></tr>
+<tr><td>--debug</td><td>—</td><td>Print step-by-step VM execution trace</td></tr>
+</table>
+<div class="note">Provide either <code>--file</code> or <code>--run</code> to specify the contract to execute.</div>
+<pre><code><span class="comment"># Run a .fab contract with debug output</span>
+./cli/fvm <span class="flag">--file</span> <span class="val">contracts/deposit.fab</span> <span class="flag">--gas</span> <span class="val">100000</span> <span class="flag">--debug</span></code></pre>
+
+<p style="margin-top:20px;">Example <code>deposit.fab</code> contract:</p>
+<pre><code><span class="comment"># deposit.fab — Simple deposit contract for Fabrik VM</span>
+
+START:
+    CALLER       <span class="comment"># Push sender address onto the stack</span>
+    CALLVALUE    <span class="comment"># Push the call value onto the stack</span>
+    SHA256       <span class="comment"># Compute storage slot (hash of address)</span>
+    SSTORE       <span class="comment"># storage[slot] = value</span>
+    SLOAD        <span class="comment"># Reload and return the stored value</span>
+    STOP</code></pre>
+
+
+<h3>fabnet — P2P Network Node</h3>
+<p>Starts a Fabnet node that listens for peer connections. Multiple peers can be dialed at startup using <code>--connect</code>. Nodes exchange messages using the Fabnet protocol.</p>
+<pre><code>./cli/fabnet &lt;datadir&gt; <span class="flag">--port</span> <span class="val">&lt;port&gt;</span> [<span class="flag">--ipaddr</span> <span class="val">&lt;host&gt;</span>] [<span class="flag">--connect</span> <span class="val">&lt;peer&gt;</span> ...]</code></pre>
+<table>
+<tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+<tr><td>&lt;datadir&gt;</td><td>—</td><td>Data directory for peer storage</td></tr>
+<tr><td>--port</td><td>—</td><td>Port to bind the server (required)</td></tr>
+<tr><td>--ipaddr</td><td>127.0.0.1</td><td>Host address to bind the server</td></tr>
+<tr><td>--connect</td><td>—</td><td>Peer address(es) to connect to on startup (repeatable)</td></tr>
+</table>
+<pre><code><span class="comment"># Terminal A — start a server</span>
+./cli/fabnet data <span class="flag">--ipaddr</span> <span class="val">127.0.0.1</span> <span class="flag">--port</span> <span class="val">8000</span>
+<span class="comment"># → 2026/04/02 16:27:33 [FABNET] Server started on 127.0.0.1:8000</span>
+
+<span class="comment"># Terminal B — connect as a peer</span>
+./cli/fabnet data2 <span class="flag">--ipaddr</span> <span class="val">127.0.0.1</span> <span class="flag">--port</span> <span class="val">8001</span> <span class="flag">--connect</span> <span class="val">127.0.0.1:8000</span>
+<span class="comment"># → 2026/04/02 16:27:39 [FABNET] Peer connected with address 127.0.0.1:33848</span>
+
+<span class="comment"># Test the connection — type in Terminal B:</span>
+<span class="val">PING</span>
+<span class="comment"># → [From 127.0.0.1:8000] PONG</span></code></pre>
 
 </section>
 
 
+<!-- DEPENDENCIES -->
 <section>
-
-<h2>Documentation</h2>
-
-<p>
-Since Fabrik is under active development, the most up-to-date
-documentation and usage instructions are maintained directly
-inside the GitHub repository.
-</p>
-
-<p>
-Please refer to:
-</p>
-
-<ul>
-
-<li>
-<a href="https://github.com/chronostech-git/fabrik/blob/main/README.md">
-README.md
-</a>
-</li>
-
-<li>
-<a href="https://github.com/chronostech-git/fabrik/blob/main/CONTRIBUTING.md">
-CONTRIBUTING.md
-</a>
-</li>
-
-<li>
-<a href="https://github.com/chronostech-git/fabrik">
-Repository source code
-</a>
-</li>
-
-</ul>
-
+<h2>Dependencies</h2>
+<p>Primary Go module dependencies:</p>
+<table>
+<tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+<tr><td>github.com/alexflint/go-arg</td><td>v1.6.1</td><td>CLI argument parsing</td></tr>
+<tr><td>github.com/holiman/uint256</td><td>v1.3.2</td><td>High-precision 256-bit arithmetic (used in FVM)</td></tr>
+<tr><td>github.com/syndtr/goleveldb</td><td>v1.0.0</td><td>Persistent chain and state storage</td></tr>
+<tr><td>github.com/google/uuid</td><td>v1.6.0</td><td>Unique identifier generation</td></tr>
+<tr><td>golang.org/x/crypto</td><td>v0.49.0</td><td>Cryptographic primitives (keys, signing)</td></tr>
+</table>
 </section>
 
 
+<!-- CONTRIBUTING -->
 <section>
-
 <h2>Contributing</h2>
-
-<p>
-Fabrik is open source and welcomes contributions. The project is
-currently in an experimental phase, so contributors are encouraged
-to explore the architecture and help improve the core components.
-</p>
-
-<p>
-Please review the contributing guidelines in the repository before
-submitting pull requests.
-</p>
-
+<p>Fabrik is open source and welcomes contributions. Since the project is in an early experimental phase, contributors are encouraged to explore the architecture and help improve core components.</p>
+<p>Please review <a href="https://github.com/chronostech-git/fabrik/blob/main/contributing.md">contributing.md</a> before submitting pull requests.</p>
+<div style="margin-top:16px;">
+<a class="button primary" href="https://github.com/chronostech-git/fabrik">View on GitHub</a>
+</div>
 </section>
+
 
 </div>
 
-<footer class="container">
-
-<p>
-Open source project by ChronosTech
-</p>
-
+<footer>
+<p>Open source project by <a href="https://github.com/chronostech-git">ChronosTech</a></p>
 </footer>
 
 </body>
-
 </html>

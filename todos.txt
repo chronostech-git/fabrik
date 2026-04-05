@@ -15,6 +15,6 @@ Changes logged here...
     * Added ConsensusEngine interface functions 
     * Removed underdeveloped functions, messy functions, and non-used functions
     * Instead of applying the genesis block to the state seperately, it applies it in 
-      the (*chain).NewWithGenesis() function. This makes the "apply genesis block" function
+      the (*chain).NewWithGenesis(...) function. This makes the "apply genesis block" function
       private, as it is not used elsewhere.
     * (*block).(*header).Height now stores the correct height. Before it would stay at 0.  
