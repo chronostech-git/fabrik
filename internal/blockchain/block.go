@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -100,13 +101,14 @@ func (b *Block) Write(datadir string) error {
 		return err
 	}
 
-	// format: ./<datadir>/blocks/<block-hash>-<block-height>.dat
-	// example: ./data/blocks/00000000000000000000000000000000-00000000.dat
-	if err := os.MkdirAll(datadir+"/blocks/", 0700); err != nil {
+	dir := filepath.Join(datadir, "blocks")
+	fmt.Println(dir)
+
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 
-	path := filepath.Join(datadir+"/blocks/", BlockFilename(b))
+	path := filepath.Join(dir, BlockFilename(b))
 	return os.WriteFile(path, data, 0600)
 }
 

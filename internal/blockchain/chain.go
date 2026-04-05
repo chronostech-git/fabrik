@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -161,27 +160,5 @@ func (c *Chain) Height() uint64 {
 	return c.Head.Header.Height
 }
 
-// PrintPretty is used when --dump is called with cli/chain command.
-// Example: cli/chain [...] --new --dump.
-func (c *Chain) PrintPretty() {
-	fmt.Println("Genesis Data")
-	fmt.Println("\thash:", c.Genesis.GenesisHash.String())
-	fmt.Println("\tvalue:", c.Genesis.InitialValue.String())
-	fmt.Println()
-	fmt.Println("Current Block Data")
-	fmt.Println("\thash:", c.Head.Hash.String())
-	fmt.Println("\ttime:", c.Head.Header.Timestamp)
-	fmt.Println("\ttxroot:", c.Head.Header.TxRoot.String())
-	fmt.Println("\theight:", c.Head.Header.Height)
-	fmt.Println()
-	fmt.Println("State Balance Data")
-	numAcc := 0
-	for addr, bal := range c.State.Balances() {
-		fmt.Printf("\tAccount #%d\n", numAcc+1)
-		fmt.Println("\t\taddr:", addr.String())
-		fmt.Println("\t\tbalance:", bal.String())
-		fmt.Println()
-		numAcc++
-	}
-
-}
+// TODO This is where PrintPretty was residing. Create a "printer.go"
+// which will print all chain state, chain data, and account data

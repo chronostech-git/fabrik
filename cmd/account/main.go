@@ -97,7 +97,6 @@ func main() {
 	}
 
 	log.Printf("%s account created using wallet %s", strings.ToUpper(args.Type), key.Address.String())
-	fmt.Println()
 	if wallet != nil {
 		log.Println("Public key:", wallet.Key.PublicKeyHex())
 	}

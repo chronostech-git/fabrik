@@ -45,6 +45,15 @@ func signAndVerifyCoinbaseTx(coinbaseTx *blockchain.Transaction, key *crypto.Key
 	return sig, validSig, nil
 }
 
+func commitGenesisBlock(chain *blockchain.Chain, genesisBlock *blockchain.Block) error {
+	chain.AddBlock(genesisBlock)
+	if err := chain.FlushChainFromCache(); err != nil {
+		return err
+	}
+	log.Printf("Genesis block commited to chain with hash %s", genesisBlock.Hash.String())
+	return nil
+}
+
 func main() {
 	arg.MustParse(&args)
 
@@ -91,11 +100,22 @@ func main() {
 		uint64(args.GenisisGasLimit),
 	)
 
+	chain.SetDataDir(args.DataDir)
+
 	log.Printf("Genesis block created at %d unix time with hash %s",
 		chain.Genesis.CreationTime, chain.Genesis.GenesisHash.String())
 
+	genesisToBlock, err := genesis.ToBlock()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	if err := commitGenesisBlock(chain, genesisToBlock); err != nil {
+		log.Panic(err)
+	}
+
 	if args.Debug {
 		fmt.Println()
-		chain.PrintPretty()
+		// TODO: Integrate "printer.go" here...
 	}
 }
