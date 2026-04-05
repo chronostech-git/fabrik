@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"crypto/sha256"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -11,28 +12,36 @@ import (
 )
 
 type BlockHeader struct {
-	PrevHash  types.Hash
-	Timestamp int64
-	TxRoot    types.Hash
-	Height    uint64
+	PrevHash  types.Hash   // Previous block hash
+	Timestamp int64        // Time of creation
+	TxRoot    types.Hash   // All transactions present in block are then hashed and stored in the TxRoot
+	Height    uint64       // Block number
+	GasLimit  uint64       // Max amount of gas to be used during block creation / application
+	GasUsed   uint64       // Total amount of gas burned for specific block
+	BaseFee   types.Amount // Base fee per gas in FAB
 }
 
 type Block struct {
-	Header BlockHeader
-	Txs    []*Transaction
+	Header BlockHeader    // Header data
+	Txs    []*Transaction // List of transactions packaged in block
 
+	// NOTE: State root is currently not implemented
+	// The "state root" is designed to make sure all nodes agree on the exact
+	// state of Fabrik at any given block.
 	StateRoot types.Hash
-	Hash      types.Hash
+
+	Hash types.Hash
 }
 
 // Create a new block
-func NewBlock(prevHash types.Hash, timestamp int64, txs []*Transaction, height uint64) *Block {
+func NewBlock(prevHash types.Hash, timestamp int64, txs []*Transaction, height uint64, gasLimit uint64) *Block {
 	b := &Block{
 		Header: BlockHeader{
 			PrevHash:  prevHash,
 			Timestamp: timestamp,
 			TxRoot:    calcTxRoot(txs),
 			Height:    height,
+			GasLimit:  gasLimit,
 		},
 		Txs: txs,
 	}
@@ -99,4 +108,28 @@ func (b *Block) Write(datadir string) error {
 
 	path := filepath.Join(datadir+"/blocks/", BlockFilename(b))
 	return os.WriteFile(path, data, 0600)
+}
+
+func (b *Block) CalcGasRemaining() uint64 {
+	gasRemaining := b.Header.GasLimit - b.Header.GasUsed
+	if gasRemaining <= 0 {
+		log.Panicf("Out of gas for block #%08d", b.Header.Height)
+	}
+	return gasRemaining
+}
+
+func (b *Block) HasTxs() bool {
+	return len(b.Txs) != 0
+}
+
+func (b *Block) IsStale() bool {
+	return b.Header.Timestamp >= b.Header.Timestamp+MaxFutureBlockTime
+}
+
+func (b *Block) Size() int {
+	enc, err := rlp.Encode(b)
+	if err != nil {
+		log.Panic(err)
+	}
+	return len(enc)
 }

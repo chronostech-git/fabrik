@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/chronostech-git/fabrik/internal/storage"
 	"github.com/chronostech-git/fabrik/internal/types"
 )
 
@@ -62,4 +63,50 @@ func (db *MemoryDB) Has(key []byte) (bool, error) {
 
 func (db *MemoryDB) Data() map[string][]byte {
 	return db.db
+}
+
+type memoryIterator struct {
+	keys     []string
+	db       *MemoryDB
+	position int
+}
+
+func (db *MemoryDB) NewIterator() storage.Iterator {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
+
+	keys := make([]string, 0, len(db.Data()))
+	for k := range db.Data() {
+		keys = append(keys, k)
+	}
+
+	return &memoryIterator{
+		keys:     keys,
+		db:       db,
+		position: 0,
+	}
+}
+
+func (it *memoryIterator) Next() bool {
+	return it.position < len(it.keys)
+}
+
+func (it *memoryIterator) Key() []byte {
+	return []byte(it.keys[it.position])
+}
+
+func (it *memoryIterator) Value() []byte {
+	it.db.lock.RLock()
+	defer it.db.lock.RUnlock()
+	data := it.db.Data()
+	return data[it.keys[it.position]]
+}
+
+// Nothing to clean up for in-memory, therfore it returns "nil"
+func (it *memoryIterator) Close() error {
+	return nil
+}
+
+func (it *memoryIterator) Advance() {
+	it.position++
 }

@@ -1,15 +1,20 @@
-updated: 04/04/26
+updated: 04/05/2026 @ 1:43am
 
-TODO (done.) Write documentation underneath "docs/" folder
+Changes logged here...
 
-TODO Work in peer functionality.
-    TODO Add a better way of identifying peers that is NOT just <ip>:<port>.
-        NOTE: Something like tcp:///<ip>:<port>/<UUID>
-    TODO (done.) Add peer discovery (including handshakes for connecting with other peers)
-
-TODO Gut the entire account system. 
-     NOTE: We will still have external & contract accounts. 
-     NOTE: Users will not have to specify --type <external|contract>. 
-     NOTE: If a user is creating an account, we will assume it is external.
-     NOTE: That said, if contract bytecode is later set on said account, it CAN become 
-           a contract account (but only if / when the contract bytecode becomes present)
+- Consensus changed and heavily developed yesterday and this morning.
+- consensus.go > interface(s) added for the consensus engine
+- params.go > chain parameters added (+2)
+- Genesis (still seperate type), can now be easily converted to a block type using ToBlock()
+- Added gas metrics to the BlockHeader type
+- chain command > [stricter] - creates coinbase transaction and the genesis block
+    * .\cli\chain --datadir <datadir> --gaslimit <gaslimit>
+    * NOTE: --gaslimit specifies the limit for the genesis block
+- Chain functions heavily changed / developed upon
+    * Added ChainIterator 
+    * Added ConsensusEngine interface functions 
+    * Removed underdeveloped functions, messy functions, and non-used functions
+    * Instead of applying the genesis block to the state seperately, it applies it in 
+      the (*chain).NewWithGenesis() function. This makes the "apply genesis block" function
+      private, as it is not used elsewhere.
+    * (*block).(*header).Height now stores the correct height. Before it would stay at 0.  

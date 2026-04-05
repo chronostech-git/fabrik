@@ -11,16 +11,22 @@ import (
 	"github.com/chronostech-git/fabrik/internal/types"
 )
 
-var (
-	MaxFutureBlockTime = 15 // We use this to calculate if a block is stale or not. If creationTime > creationTime + MaxFutureBlockTime -- it is considered stale data and will not be added to the chain.
-)
+type BlockCache []*Block
+
+type ChainWriter interface {
+	AddBlock(b *Block)          // Add a single block to the cache
+	AddChain(blocks []*Block)   // Add multiple blocks to the cache
+	FlushChainFromCache() error // Flush multiple blocks from the cache
+}
 
 type Chain struct {
-	DB         storage.Database // NOTE: Using the interface means it can be leveldb OR memorydb.
-	State      *state.ChainState
-	BlockCache []*Block
-	Genesis    *Genesis
-	Head       *Block
+	DB            storage.Database // NOTE: Using the interface means it can be leveldb OR memorydb.
+	State         *state.ChainState
+	BlockCache    BlockCache
+	Genesis       *Genesis
+	Head          *Block
+	ChainIterator storage.Iterator
+	Consensus     ConsensusEngine
 
 	// For writing to disk. All block files will be stored in <datadir>.
 	DataDir string
@@ -37,12 +43,14 @@ func New(db storage.Database) *Chain {
 }
 
 // Create a new chain WITH the genesis block.
-func NewWithGenesis(db storage.Database, genesis *Genesis) *Chain {
+func NewWithGenesis(db storage.Database, coinbaseTx *Transaction, genesis *Genesis, gasLimit uint64) *Chain {
 	c := New(db)
 	c.Genesis = genesis
-
-	// For genesis state
 	c.State.AddBalance(genesis.Coinbase, genesis.InitialValue)
+
+	if err := c.applyGenesis(coinbaseTx, gasLimit); err != nil {
+		log.Panic(err)
+	}
 
 	return c
 }
@@ -61,6 +69,7 @@ func (c *Chain) ApplyBlock(b *Block) error {
 		return err
 	}
 
+	b.Header.Height += 1
 	c.Head = b
 
 	return nil
@@ -70,69 +79,86 @@ func (c *Chain) ApplyBlock(b *Block) error {
 // Yes, block fields and genesis fields may share similarities and are assumed to be the same type,
 // this is why it is important to distinguish the difference between a genesis block, and any proceeding
 // blocks being added to the chain.
-func (c *Chain) ApplyGenesis(coinbaseTx *Transaction) error {
+func (c *Chain) applyGenesis(coinbaseTx *Transaction, gasLimit uint64) error {
 	if c.Genesis == nil {
 		return ErrGenesisMissing
 	}
 
 	c.Genesis.Txs = append(c.Genesis.Txs, coinbaseTx)
 
-	genesisBlock := NewBlock(types.Empty32(), time.Now().Unix(), c.Genesis.Txs, 0)
-	if err := c.ApplyBlock(genesisBlock); err != nil {
-		return err
-	}
+	genesisBlock := NewBlock(types.Empty32(), time.Now().Unix(), c.Genesis.Txs, 0, gasLimit)
+	// if err := c.ApplyBlock(genesisBlock); err != nil {
+	// 	return err
+	// }
 
 	c.Head = genesisBlock
 
 	return nil
 }
 
+func (c *Chain) HasGenesis() bool {
+	return c.Genesis != nil
+}
+
 func (c *Chain) GetBalance(addr types.Address) types.Amount {
 	return c.State.GetBalance(addr)
 }
 
-func (c *Chain) emptyCache() bool {
+// Returns true if the cache is empty
+func (c *Chain) CacheEmpty() bool {
 	return len(c.BlockCache) == 0
+}
+
+// Remove all blocks from cache
+func (c *Chain) ClearCache() {
+	clear(c.BlockCache)
 }
 
 func (c *Chain) writeBlock(b *Block) error {
 	return b.Write(c.DataDir)
 }
 
-func (c *Chain) AddBlockToCache(b *Block) {
+// Add a block to the cache
+func (c *Chain) AddBlock(b *Block) {
 	c.BlockCache = append(c.BlockCache, b)
 }
 
-// Flush (or push) contents of BlockCache and write it to disk / save to leveldb or memorydb.
-// If cache is empty, it will panic.
-func (c *Chain) FlushCacheToDisk() error {
-	if c.emptyCache() {
+// Add multiple blocks (chain of blocks) to the cache
+func (c *Chain) AddChain(blocks []*Block) {
+	for _, block := range blocks {
+		c.AddBlock(block)
+	}
+}
+
+// If blocks are in the cache, this function will commit them to the disk, and DB
+// after it is already validated.
+func (c *Chain) FlushChainFromCache() error {
+	if c.CacheEmpty() {
 		return ErrCacheEmpty
 	}
 
-	for i, block := range c.BlockCache {
-		err := c.ApplyBlock(block)
+	for _, block := range c.BlockCache {
+		err := c.writeBlock(block)
+		if err != nil {
+			return ErrFailedWrite
+		}
+
+		blockBytes, err := rlp.Encode(block)
 		if err != nil {
 			return err
 		}
 
-		err = c.writeBlock(block)
+		err = c.DB.Put(block.Hash.Bytes(), blockBytes)
 		if err != nil {
 			return err
 		}
-
-		blockData, err := rlp.Encode(block)
-		if err != nil {
-			return err
-		}
-		c.DB.Put(block.Hash.Bytes(), blockData)
-
-		log.Println("Block #%05d flushed to disk\n", i)
 	}
 
-	fmt.Println("Finished.")
-
 	return nil
+}
+
+func (c *Chain) Height() uint64 {
+	return c.Head.Header.Height
 }
 
 // PrintPretty is used when --dump is called with cli/chain command.

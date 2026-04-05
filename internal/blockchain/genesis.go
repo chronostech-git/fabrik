@@ -42,6 +42,31 @@ func (g *Genesis) computeHash() types.Hash {
 	return sha256.Sum256(enc)
 }
 
+func (g *Genesis) ToBlock() (*Block, error) {
+	enc, err := rlp.Encode(g.Txs)
+	if err != nil {
+		return nil, err
+	}
+	txRoot := sha256.Sum256(enc)
+
+	genesisHeader := BlockHeader{
+		PrevHash:  types.Empty32(),
+		Timestamp: g.CreationTime,
+		TxRoot:    txRoot,
+		Height:    0,
+		GasLimit:  0, // TODO this should be set by the user upon --new, or chain creation
+		GasUsed:   0,
+		BaseFee:   types.ZeroAmount(),
+	}
+
+	return &Block{
+		Header:    genesisHeader,
+		Txs:       g.Txs,
+		StateRoot: types.Empty32(),
+		Hash:      g.GenesisHash,
+	}, nil
+}
+
 // Write the genesis to the disk.
 func (g *Genesis) Write(datadir string) error {
 	data, err := rlp.Encode(g)

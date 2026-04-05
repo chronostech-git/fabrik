@@ -71,18 +71,13 @@ func main() {
 	// Parse CLI arguments
 	arg.MustParse(&args)
 
-	// Initialize disk storage and peer manager
 	disk := p2p.NewDiskStorage(args.DataDir)
 	peermgr := p2p.NewPeerManager()
 	addr := net.JoinHostPort(args.Host, args.Port)
 
-	// Start TCP server for incoming connections
 	go startServer(addr, peermgr, disk)
 
-	// Connect to peers passed as CLI arguments
 	connectToPeers(args.Peers, peermgr, disk)
-
-	// Register any peers already in the manager
 	registerExistingPeers(peermgr.Peers, disk)
 
 	// Block forever (or implement a proper signal handler)

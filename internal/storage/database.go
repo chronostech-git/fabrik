@@ -7,4 +7,5 @@ type Database interface {
 	Put(key, value []byte) error
 	Delete(key []byte) error
 	Has(key []byte) (bool, error)
+	NewIterator() Iterator
 }
