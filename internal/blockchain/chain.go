@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/chronostech-git/fabrik/internal/blockchain/debug"
 	"github.com/chronostech-git/fabrik/internal/serialize/rlp"
 	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/chronostech-git/fabrik/internal/storage"
@@ -21,11 +22,12 @@ type ChainWriter interface {
 type Chain struct {
 	DB            storage.Database // NOTE: Using the interface means it can be leveldb OR memorydb.
 	State         *state.ChainState
-	BlockCache    BlockCache
+	BlockCache    BlockCache // is equal to []*Block
 	Genesis       *Genesis
-	Head          *Block
+	Head          *Block // Current block
 	ChainIterator storage.Iterator
-	Consensus     ConsensusEngine
+	Validator     *Validator
+	Printer       debug.Printer // Used for printing large quantities of data nicely (for debug purposes)
 
 	// For writing to disk. All block files will be stored in <datadir>.
 	DataDir string
@@ -52,6 +54,11 @@ func NewWithGenesis(db storage.Database, coinbaseTx *Transaction, genesis *Genes
 	}
 
 	return c
+}
+
+// If used, set the debug.Printer
+func (c *Chain) SetDebugPrinter(printer debug.Printer) {
+	c.Printer = printer
 }
 
 // Set's the datadir to given path (param datadir).

@@ -2,13 +2,13 @@ package main
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"log"
 	"path/filepath"
 	"time"
 
 	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/blockchain"
+	blockprinter "github.com/chronostech-git/fabrik/internal/blockchain/debug/block_printer"
 	"github.com/chronostech-git/fabrik/internal/crypto"
 	"github.com/chronostech-git/fabrik/internal/serialize/rlp"
 	"github.com/chronostech-git/fabrik/internal/storage/keystore"
@@ -115,7 +115,9 @@ func main() {
 	}
 
 	if args.Debug {
-		fmt.Println()
-		// TODO: Integrate "printer.go" here...
+		blockPrinter := blockprinter.New()
+		blockPrinter.SetBlock(genesisToBlock)
+		chain.SetDebugPrinter(blockPrinter)
+		chain.Printer.PrintData()
 	}
 }

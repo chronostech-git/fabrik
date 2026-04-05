@@ -7,6 +7,7 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/blockchain"
+	txprinter "github.com/chronostech-git/fabrik/internal/blockchain/debug/tx_printer"
 	"github.com/chronostech-git/fabrik/internal/crypto"
 	"github.com/chronostech-git/fabrik/internal/storage/keystore"
 	"github.com/chronostech-git/fabrik/internal/types"
@@ -26,6 +27,9 @@ var args struct {
 	Data      string `arg:"--data" help:"Message to sign (string)"`
 	Verify    bool   `arg:"--verify" help:"Use this flag to verify the signature generated when signing data"`
 	Signature string `arg:"--sig" help:"Signature you would like to verify"`
+
+	// For debugging
+	Debug bool `arg:"--debug"`
 }
 
 func createTransaction(datadir string, sentTo string, amount int, gasLimit int) *blockchain.Transaction {
@@ -75,9 +79,15 @@ func signData(datadir string, data string, verify bool) *crypto.Signature {
 func main() {
 	arg.MustParse(&args)
 
+	txPrinter := txprinter.New()
+
 	if args.Transact {
 		tx := createTransaction(args.DataDir, args.SendTo, args.Amount, args.GasLimit)
-		log.Printf("transaction of %s FAB sent from %s to %s\n", tx.Value.String(), tx.Sender.String(), tx.Receiver.String())
+		if !args.Debug {
+			log.Printf("transaction of %s FAB sent from %s to %s\n", tx.Value.String(), tx.Sender.String(), tx.Receiver.String())
+		}
+		txPrinter.SetTx(tx)
+		txPrinter.PrintData()
 	} else if args.Sign {
 		sig := signData(args.DataDir, args.Data, args.Verify)
 		fmt.Printf("signed & verified signature: %s", sig.Hex())
