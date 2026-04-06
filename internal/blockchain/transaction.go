@@ -19,7 +19,8 @@ type Transaction struct {
 	Hash      types.Hash
 }
 
-// Create a new transaction
+// NewTx creates a new transaction and sets the transactions hash using
+// the computeHash function.
 func NewTx(sender, receiver types.Address, value types.Amount, nonce uint64, data []byte) *Transaction {
 	tx := &Transaction{
 		Sender:   sender,
@@ -54,19 +55,28 @@ func (tx *Transaction) computeHash() types.Hash {
 	return sha256.Sum256(enc)
 }
 
-// TxView interface functions
+// State TxView interface functions are used for state only.
+
+// From is a state compatible function used to get the Sender of
+// a Transaction.
 func (tx *Transaction) From() types.Address {
 	return tx.Sender
 }
 
+// To is a state compatible function used to get the Receiver of
+// a Transaction.
 func (tx *Transaction) To() types.Address {
 	return tx.Receiver
 }
 
+// Val is a state compatible function used to get the value of
+// a Transaction.
 func (tx *Transaction) Val() types.Amount {
 	return tx.Value
 }
 
+// Dat is a state compatible function used to get the
+// contract bytecode (Data) within a transaction.
 func (tx *Transaction) Dat() []byte {
 	return tx.Data
 }

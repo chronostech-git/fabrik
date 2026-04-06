@@ -1,6 +1,5 @@
 BINDIR := cli
 
-NODE    := $(BINDIR)\node.exe
 CHAIN   := $(BINDIR)\chain.exe
 FVM     := $(BINDIR)\fvm.exe
 ACCOUNT := $(BINDIR)\account.exe

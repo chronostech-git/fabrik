@@ -13,6 +13,7 @@ var (
 	ErrNegativeAmount = errors.New("amount cannot be negative")
 )
 
+// NewAmount creates an instance of Amount given a value of int64
 func NewAmount(x int64) Amount {
 	if x < 0 {
 		panic(ErrNegativeAmount)
@@ -20,6 +21,7 @@ func NewAmount(x int64) Amount {
 	return Amount{i: big.NewInt(x)}
 }
 
+// NewAmountFromBig creates an instance of Amount given a value of *big.Int
 func NewAmountFromBig(x *big.Int) Amount {
 	if x == nil {
 		return Amount{i: new(big.Int)}
@@ -30,6 +32,7 @@ func NewAmountFromBig(x *big.Int) Amount {
 	return Amount{i: new(big.Int).Set(x)}
 }
 
+// ZeroAmount returns an empty amount (value of 0)
 func ZeroAmount() Amount {
 	return Amount{i: new(big.Int)}
 }

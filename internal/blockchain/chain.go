@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/chronostech-git/fabrik/internal/blockchain/consensus"
 	"github.com/chronostech-git/fabrik/internal/blockchain/debug"
 	"github.com/chronostech-git/fabrik/internal/serialize/rlp"
 	"github.com/chronostech-git/fabrik/internal/state"
@@ -26,14 +27,14 @@ type Chain struct {
 	Genesis       *Genesis
 	Head          *Block // Current block
 	ChainIterator storage.Iterator
-	Validator     *Validator
+	Engine        consensus.Engine
 	Printer       debug.Printer // Used for printing large quantities of data nicely (for debug purposes)
 
 	// For writing to disk. All block files will be stored in <datadir>.
 	DataDir string
 }
 
-// Create a new empty chain WITHOUT genesis block.
+// New creates a new empty chain excluding the genesis block
 func New(db storage.Database) *Chain {
 	chain := &Chain{
 		DB:    db,
@@ -43,7 +44,8 @@ func New(db storage.Database) *Chain {
 	return chain
 }
 
-// Create a new chain WITH the genesis block.
+// NewWithGenesis creates an empty chain using New and sets the chains
+// genesis block to the provided genesis when calling NewWithGenesis.
 func NewWithGenesis(db storage.Database, coinbaseTx *Transaction, genesis *Genesis, gasLimit uint64) *Chain {
 	c := New(db)
 	c.Genesis = genesis
@@ -56,18 +58,25 @@ func NewWithGenesis(db storage.Database, coinbaseTx *Transaction, genesis *Genes
 	return c
 }
 
-// If used, set the debug.Printer
-func (c *Chain) SetDebugPrinter(printer debug.Printer) {
-	c.Printer = printer
+// SetConsensusMechanism is used in cmd/chain/main.go.
+// When using cli/chain.exe command line tool, the user can
+// choose between the two provided consensus mechanisms:
+// "hawk-pow" 	- Proof Of Work consensus
+// "falcon-poi" - Proof Of Importance consensus
+func (c *Chain) SetConsensusMechanism(e consensus.Engine) {
+	c.Engine = e
 }
 
-// Set's the datadir to given path (param datadir).
+// SetDataDir is used in cmd/chain/main.go to set the chains
+// data directory to the provided folder passed in cli/chain.exe.
 func (c *Chain) SetDataDir(datadir string) {
 	c.DataDir = datadir
 }
 
-// Updates the blockchain state (balances, accounts, transactions etc...)
-// See state/chain_state.go for more information on how balances etc work
+// ApplyBlock applies the block to the state.
+// Also increments the block height and sets the chain head
+// to the block after all transactions within the block have been applied
+// to the state.
 func (c *Chain) ApplyBlock(b *Block) error {
 	txs := b.ToStateTxs()
 
@@ -81,10 +90,10 @@ func (c *Chain) ApplyBlock(b *Block) error {
 	return nil
 }
 
-// NOTE: This function is needed due to Block and Genesis technically being seperate structures.
-// Yes, block fields and genesis fields may share similarities and are assumed to be the same type,
-// this is why it is important to distinguish the difference between a genesis block, and any proceeding
-// blocks being added to the chain.
+// applyGenesis does the same as ApplyBlock, however it is private
+// due to only being called within the blockchain module.
+// Note: Block and Genesis are not inherently the same. A
+// Genesis is a Block...A Block is not a Genesis.
 func (c *Chain) applyGenesis(coinbaseTx *Transaction, gasLimit uint64) error {
 	if c.Genesis == nil {
 		return ErrGenesisMissing
@@ -102,58 +111,57 @@ func (c *Chain) applyGenesis(coinbaseTx *Transaction, gasLimit uint64) error {
 	return nil
 }
 
+// HasGenesis returns true if the genesis is present in the chain.
 func (c *Chain) HasGenesis() bool {
 	return c.Genesis != nil
 }
 
-func (c *Chain) GetBalance(addr types.Address) types.Amount {
-	return c.State.GetBalance(addr)
-}
-
-// Returns true if the cache is empty
+// CacheEmpty returns true if the cache has no blocks.
 func (c *Chain) CacheEmpty() bool {
 	return len(c.BlockCache) == 0
 }
 
-// Remove all blocks from cache
+// ClearCache erases all blocks that may, or may not be in the cache.
 func (c *Chain) ClearCache() {
 	clear(c.BlockCache)
 }
 
+// writeBlock is a helper function used within FlushCache function.
+// Writes provided block to the disk (.dat file) under the blocks/ folder
+// in <datadir>.
 func (c *Chain) writeBlock(b *Block) error {
 	return b.Write(c.DataDir)
 }
 
-// Add a block to the cache
+// AddBlock adds a block to the cache
 func (c *Chain) AddBlock(b *Block) {
 	c.BlockCache = append(c.BlockCache, b)
 }
 
-// Add multiple blocks (chain of blocks) to the cache
-func (c *Chain) AddChain(blocks []*Block) {
-	for _, block := range blocks {
-		c.AddBlock(block)
-	}
-}
-
-// If blocks are in the cache, this function will commit them to the disk, and DB
-// after it is already validated.
-func (c *Chain) FlushChainFromCache() error {
+// FlushCache does the following-
+// 1. Checks if the cache is currently empty
+// 2. Iterates over all blocks within the block cache
+// 3. Writes each iterated block to a .dat file
+// 4. Encodes iterated block and writes it to leveldb
+func (c *Chain) FlushCache() error {
 	if c.CacheEmpty() {
 		return ErrCacheEmpty
 	}
 
 	for _, block := range c.BlockCache {
+		// Write block to disk
 		err := c.writeBlock(block)
 		if err != nil {
 			return ErrFailedWrite
 		}
 
+		// Encode block
 		blockBytes, err := rlp.Encode(block)
 		if err != nil {
 			return err
 		}
 
+		// Commit block to leveldb or memorydb
 		err = c.DB.Put(block.Hash.Bytes(), blockBytes)
 		if err != nil {
 			return err
@@ -163,9 +171,17 @@ func (c *Chain) FlushChainFromCache() error {
 	return nil
 }
 
+// Height returns the current height of the chain.
 func (c *Chain) Height() uint64 {
 	return c.Head.Header.Height
 }
 
-// TODO This is where PrintPretty was residing. Create a "printer.go"
-// which will print all chain state, chain data, and account data
+// ToConsensusChainView converts the chain into a consensus-compatible
+// chain.
+func (c *Chain) ToConsensusChainView() *consensus.ChainView {
+	return &consensus.ChainView{
+		DB:    c.DB,
+		State: c.State,
+		Head:  c.Head.ToConsensusBlockView(),
+	}
+}

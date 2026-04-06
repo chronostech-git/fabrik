@@ -16,8 +16,8 @@ type Instruction struct {
 	Line   int
 }
 
-// Parse a .fab contract file.
-// See contracts/ folder for example contracts (simple.fab, complex.fab, deposit.fab)
+// ParseFile parses a given fab contract file and returns
+// the list of instructions via []Instruction.
 func ParseFile(path string) ([]Instruction, error) {
 	if !strings.HasSuffix(path, ".fab") {
 		return nil, fmt.Errorf("expected .fab file")

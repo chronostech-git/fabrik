@@ -10,7 +10,6 @@ type ExternalAccount struct {
 	address types.Address
 }
 
-// Create a new external account (no code)
 func NewAccount(addr types.Address) *ExternalAccount {
 	return &ExternalAccount{
 		balance: types.ZeroAmount(),

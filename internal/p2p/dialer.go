@@ -4,8 +4,8 @@ import (
 	"strings"
 )
 
-// Dial peer connects to given address
-// If connection is successful, the peer is added to the PeerManager
+// DialPeer dials a peer given a peer address, and adds the peer
+// to the PeerManager
 func DialPeer(address string, manager *PeerManager) (*Peer, error) {
 	host := strings.Split(address, ":")[0]
 	port := strings.Split(address, ":")[1]

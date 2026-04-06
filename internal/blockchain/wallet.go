@@ -13,7 +13,9 @@ type Wallet struct {
 	Key      *crypto.Key
 }
 
-// Create a new wallet
+// NewWallet generates a crypto.Key and stores the key using
+// the provided keystore.
+// Returns a Wallet with the KeyStore and Key filled.
 func NewWallet(ks keystore.Store) *Wallet {
 	key := crypto.NewKey()
 	err := ks.StoreKey(key)
@@ -27,7 +29,8 @@ func NewWallet(ks keystore.Store) *Wallet {
 	}
 }
 
-// Sign a transaction using the wallet key
+// SignTx uses the crypto.Key generated in NewWallet to
+// cryptographically sign a transaction.
 func (w *Wallet) SignTx(tx *Transaction) (*crypto.Signature, error) {
 	enc, _ := rlp.Encode(tx)
 	hash := sha256.Sum256(enc)

@@ -15,6 +15,8 @@ type DiskStorage struct {
 	Directory string
 }
 
+// NewDiskStorage creates an instance of DiskStorage given a
+// Storage directory (seperate, or the same as datadir specified in CLI).
 func NewDiskStorage(dir string) *DiskStorage {
 	return &DiskStorage{
 		Directory: dir,
@@ -50,6 +52,7 @@ func (ds *DiskStorage) WritePeer(p *Peer) error {
 	return nil
 }
 
+// LoadPeers loads the peers in peerJson format from the peers.json file.
 func (ds *DiskStorage) LoadPeers() (map[string]peerJson, error) {
 	var peers map[string]peerJson
 

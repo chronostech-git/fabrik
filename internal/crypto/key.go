@@ -14,7 +14,8 @@ type Key struct {
 	Address    types.Address
 }
 
-// Create a new key
+// NewKey generates a new ecdsa private key with the P256
+// elliptic curve algorithm.
 func NewKey() *Key {
 	priv, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 
@@ -26,7 +27,8 @@ func NewKey() *Key {
 	return k
 }
 
-// Sign hashed data using the ecdsa private key
+// Sign signs hashed data using the ecdsa key generated
+// when NewKey is called.
 func (k *Key) Sign(hash types.Hash) (*Signature, error) {
 	r, s, err := ecdsa.Sign(rand.Reader, k.PrivateKey, hash[:])
 	if err != nil {
@@ -36,7 +38,8 @@ func (k *Key) Sign(hash types.Hash) (*Signature, error) {
 	return &Signature{R: r, S: s}, nil
 }
 
-// Verify if a signature is valid given the data's hash, and signature itself
+// Verify verifies a signature given the data hash passed in the Sign function.
+// If the hash is not the same, and the signature does not match--it will return false (invalid sig).
 func (k *Key) Verify(hash types.Hash, sig *Signature) bool {
 	pub := &k.PrivateKey.PublicKey
 	return ecdsa.Verify(pub, hash[:], sig.R, sig.S)

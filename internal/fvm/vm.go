@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/holiman/uint256"
 )
 
@@ -19,7 +18,9 @@ type VM struct {
 	dispatch map[OpCode]func(*VM) error
 }
 
-func New(prog *Program, state *state.AccountState, gasLimit uint64) *VM {
+// New creates a new instance of VM given a program with
+// bytecode, and a gasLimit for running.
+func New(prog *Program, gasLimit uint64) *VM {
 	vm := &VM{
 		prog:     prog,
 		pc:       0,
@@ -33,6 +34,8 @@ func New(prog *Program, state *state.AccountState, gasLimit uint64) *VM {
 	return vm
 }
 
+// initDispatch initializes the OpCodes and matches
+// them to their corresponding functions for stack operations.
 func (vm *VM) initDispatch() {
 	// STOP
 	vm.dispatch[STOP] = func(vm *VM) error {
@@ -151,7 +154,7 @@ func (vm *VM) initDispatch() {
 	vm.dispatch[EXTCODEHASH] = func(vm *VM) error { vm.stack.Push(*uint256.NewInt(0)); return nil }
 }
 
-// Helper for arithmetic ops
+// binaryOp Helper for arithmetic ops
 func binaryOp(fn func(a, b *uint256.Int) *uint256.Int) func(vm *VM) error {
 	return func(vm *VM) error {
 		a := vm.stack.Pop()
@@ -161,7 +164,8 @@ func binaryOp(fn func(a, b *uint256.Int) *uint256.Int) func(vm *VM) error {
 	}
 }
 
-// Burn gas
+// burnGas subtracts the given amount of gas used from vm.gas.
+// This will give use the gas remaining.
 func (vm *VM) burnGas(amount uint64) error {
 	if vm.gas < amount {
 		return fmt.Errorf("out of gas")
@@ -177,7 +181,13 @@ func sha256Sum(data []byte) []byte {
 	return h.Sum(nil)
 }
 
-// Run the VM
+// GasRemaining gives us the total gas left over after burnGas
+// is called.
+func (vm *VM) GasRemaining() uint64 {
+	return vm.gas
+}
+
+// Run runs the vm assuming it is given the proper parameters.
 func (vm *VM) Run() error {
 	for vm.pc < len(vm.prog.code) {
 		op := OpCode(vm.prog.code[vm.pc])
@@ -196,6 +206,8 @@ func (vm *VM) Run() error {
 	return nil
 }
 
+// PrintContractAddress debug function that prints
+// the derived contract address given the creator address.
 func (vm *VM) PrintContractAddress(creator []byte) {
 	addrHex, err := DeriveContractAddressHex(creator, 0)
 	if err != nil {
@@ -204,19 +216,19 @@ func (vm *VM) PrintContractAddress(creator []byte) {
 	fmt.Println("contract address:", addrHex)
 }
 
-func (vm *VM) GasRemaining() uint64 {
-	return vm.gas
-}
-
-// Debug helpers
+// PrintStackData debug function that prints the stack data.
 func (vm *VM) PrintStackData() {
 	fmt.Println("stack:", vm.stack.data)
 }
 
+// PrintGasRemaining debug function that prints vm.gas
+// after the VM is run.
 func (vm *VM) PrintGasRemaining() {
 	fmt.Println("gas remaining:", vm.gas)
 }
 
+// PrintDisasm prints the disassembled bytecode using the
+// Disassemble function.
 func (vm *VM) PrintDisasm() {
 	disasm, err := Disassemble(vm.prog.code)
 	if err != nil {

@@ -7,6 +7,8 @@ import (
 	"github.com/holiman/uint256"
 )
 
+// Disassemble takes in bytecode and converts it back into
+// a stack-based format.
 func Disassemble(code []byte) (string, error) {
 	var out []string
 

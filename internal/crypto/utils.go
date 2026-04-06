@@ -6,7 +6,8 @@ import (
 	"math/big"
 )
 
-// Takes in the bytes of an encoded private key and returns type *ecdsa.PrivateKey
+// BytesToPrivateKey converts encoded private key bytes back into an ecdsa.PrivateKey
+// given that the bytes are valid.
 func BytesToPrivateKey(b []byte) *ecdsa.PrivateKey {
 	d := new(big.Int).SetBytes(b)
 	priv := new(ecdsa.PrivateKey)

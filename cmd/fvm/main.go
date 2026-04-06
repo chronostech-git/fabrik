@@ -7,7 +7,6 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/fvm"
-	"github.com/chronostech-git/fabrik/internal/state"
 )
 
 var args struct {
@@ -20,7 +19,6 @@ var args struct {
 
 func runSmartContractFromFile(
 	file string,
-	accountState *state.AccountState,
 	gasLimit uint64,
 	debug bool,
 ) error {
@@ -36,7 +34,7 @@ func runSmartContractFromFile(
 
 	prog := fvm.NewProgram(bytecode)
 
-	vm := fvm.New(prog, accountState, gasLimit)
+	vm := fvm.New(prog, gasLimit)
 
 	if err := vm.Run(); err != nil {
 		return err
@@ -61,13 +59,12 @@ func runSmartContractFromFile(
 
 func runSmartContractFromHex(
 	hexCode []byte,
-	accountState *state.AccountState,
 	gasLimit uint64,
 	debug bool,
 ) error {
 	prog := fvm.NewProgram(hexCode)
 
-	vm := fvm.New(prog, accountState, gasLimit)
+	vm := fvm.New(prog, gasLimit)
 
 	if err := vm.Run(); err != nil {
 		return err
@@ -86,10 +83,8 @@ func runSmartContractFromHex(
 func main() {
 	arg.MustParse(&args)
 
-	state := state.NewAccountState()
-
 	if args.Run == "" {
-		err := runSmartContractFromFile(args.File, state, uint64(args.Gas), args.Debug)
+		err := runSmartContractFromFile(args.File, uint64(args.Gas), args.Debug)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -98,7 +93,7 @@ func main() {
 		if err != nil {
 			log.Panic(err)
 		}
-		err = runSmartContractFromHex(bytecode, state, uint64(args.Gas), args.Debug)
+		err = runSmartContractFromHex(bytecode, uint64(args.Gas), args.Debug)
 		if err != nil {
 			log.Panic(err)
 		}

@@ -7,7 +7,7 @@ import (
 
 // HandlePeer handles messages, and filters them based on msg.Type.
 // If msg.Type is a block or transaction, it will broadcast it to all known peers.
-// If msg.Type is something like a handshake, it will be between only 2 peers.
+// If msg.Type is something like a handshake, it will be between only two peers.
 func HandlePeer(peer *Peer, manager *PeerManager) {
 	scanner := bufio.NewScanner(peer.Conn)
 
@@ -42,5 +42,8 @@ func HandlePeer(peer *Peer, manager *PeerManager) {
 	}
 
 	manager.RemovePeer(peer)
-	peer.Conn.Close()
+	err := peer.Conn.Close()
+	if err != nil {
+		return
+	}
 }

@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-// A peer represents a single connection to another node
+// Peer represents a single connection to another node
 type Peer struct {
 	ID     string
 	Conn   net.Conn
@@ -14,8 +14,7 @@ type Peer struct {
 	writer *bufio.Writer
 }
 
-// Create a new "inbound" peer.
-// An inbound peer uses a RemoteAddr (remote network address) if known.
+// NewInboundPeer creates a new "inbound" peer.
 func NewInboundPeer(conn net.Conn) *Peer {
 	return &Peer{
 		ID:     conn.RemoteAddr().String(),
@@ -25,7 +24,7 @@ func NewInboundPeer(conn net.Conn) *Peer {
 	}
 }
 
-// Create an "outbound" peer.
+// NewOutboundPeer creates an "outbound" peer.
 func NewOutboundPeer(network, host, port string) (*Peer, error) {
 	address := net.JoinHostPort(host, port)
 	conn, err := net.Dial(network, address)
@@ -41,7 +40,7 @@ func NewOutboundPeer(network, host, port string) (*Peer, error) {
 	}, nil
 }
 
-// Send a message from specific peer.
+// Send sends message from specific peer.
 // See message.go for msg implementation.
 func (p *Peer) Send(msg *Message) error {
 	_, err := fmt.Fprintf(p.writer, "%s %s\n", msg.Type, msg.Data)
@@ -73,15 +72,15 @@ func SendTo(address string, msg *Message) error {
 	return nil
 }
 
-// For disk file.
-// This allows for json marshaling compatibility.
+// peerJson is used for the peers.json file that peers
+// are saved to on discovery.
 type peerJson struct {
 	ID   string `json:"id"`
 	Host string `json:"host"`
 	Port string `json:"port"`
 }
 
-// PeerToJson converts a given peer into a json string.
+// PeerToJson converts a given peer into a peerJson struct.
 func PeerToJson(p *Peer) peerJson {
 	host, port, _ := net.SplitHostPort(p.ID)
 	return peerJson{

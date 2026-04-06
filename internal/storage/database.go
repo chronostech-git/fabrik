@@ -1,7 +1,7 @@
 package storage
 
-// Basic functions for now.
-// This interface WILL be extended to support an iterator as well.
+// Database interface specifies db functions and iterator functions for
+// memorydb and leveldb
 type Database interface {
 	Get(key []byte) ([]byte, error)
 	Put(key, value []byte) error

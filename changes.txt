@@ -1,0 +1,19 @@
+Updated 04/06/26
+
+* Hawk consensus engine added for PoW under internal/blockchain/consensus
+    * Falcon consensus engine for PoI (Proof of Importance) not implemented yet
+
+* A boolean type is now added to RLP encoding/decoding
+
+* cmd/chain heavily changed to conform to consesnus (under test mode right now)
+    * You may now choose your consesnus mechanism under the --mechanism flag. 
+      The only supported consensus mechanism is hawk-pow right now
+
+* Entire project has been re commented with better and clearer documentation on functions, structs and interfaces
+
+* Unused scripts folder removed
+
+* The account (cmd/account/main.go) file was completely redone to adhere to current updates.
+    * Now, all you have to specify is --datadir and --withwallet
+
+* Went through entire golang codebase and removed, cleaned up and modified unused, or unnecessary code.

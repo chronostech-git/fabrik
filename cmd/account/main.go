@@ -1,71 +1,51 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/alexflint/go-arg"
-	"github.com/chronostech-git/fabrik/internal/accounts"
-	"github.com/chronostech-git/fabrik/internal/accounts/contract"
 	"github.com/chronostech-git/fabrik/internal/accounts/external"
 	"github.com/chronostech-git/fabrik/internal/blockchain"
-	"github.com/chronostech-git/fabrik/internal/crypto"
-	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/chronostech-git/fabrik/internal/storage/keystore"
 )
 
 var args struct {
-	DataDir    string `arg:"required"`
-	Type       string `arg:"--type,required"`     // external or contract
-	WithWallet bool   `arg:"--wallet"`            // Create a new wallet if true
-	Stake      int    `arg:"--stake" default:"0"` // Stake amount (>=32 fab)
-	GasLimit   int    `arg:"--gas" help:"Gas limit for calling staking deposit contract"`
-	Debug      bool   `arg:"--debug" help:"Debug mode for FVM deposit contract execution"`
+	DataDir    string
+	WithWallet bool
 }
 
-func createWallet(store keystore.Store) (*blockchain.Wallet, *crypto.Key) {
-	w := blockchain.NewWallet(store)
-	return w, w.Key
+func initFileKeyStore(datadir string) *keystore.FileStore {
+	return keystore.NewFileStore(datadir)
 }
 
-func loadWallet(store keystore.Store) (*blockchain.Wallet, *crypto.Key) {
-	key, err := store.GetKey()
-	if err != nil {
-		log.Panic(err)
-	}
-	return &blockchain.Wallet{KeyStore: store, Key: key}, key
+func createNewWallet(datadir string) *blockchain.Wallet {
+	ks := initFileKeyStore(datadir)
+	return blockchain.NewWallet(ks)
 }
 
 func main() {
 	arg.MustParse(&args)
 
-	store := keystore.NewFileStore(args.DataDir)
-	wallet, key := func() (*blockchain.Wallet, *crypto.Key) {
-		if args.WithWallet {
-			return createWallet(store)
-		}
-		return loadWallet(store)
-	}()
+	if args.WithWallet {
+		wallet := createNewWallet(args.DataDir)
+		account := external.NewAccount(wallet.Key.Address)
 
-	state := state.NewAccountState()
+		log.Printf("An external account with a balance of %s was created\n", account.Balance().String())
+		log.Println("A new wallet has been created and was used to create your account")
+		log.Printf("Wallet address: %s\n", wallet.Key.Address.String())
 
-	var account accounts.Account
-	switch args.Type {
-	case "contract":
-		account = contract.NewAccount(key.Address)
-	case "external":
-		account = external.NewAccount(key.Address)
-	default:
-		log.Panicf("unknown account type: %s", args.Type)
+		return
 	}
-	state.AddAccount(account)
 
-	log.Printf("%s account created using wallet %s", strings.ToUpper(args.Type), key.Address.String())
-	if wallet != nil {
-		log.Println("Public key:", wallet.Key.PublicKeyHex())
+	ks := initFileKeyStore(args.DataDir)
+
+	key, err := ks.GetKey()
+	if err != nil {
+		log.Panic(err)
 	}
-	log.Printf("Private key stored on disk: %s/keystore/<address>.key", args.DataDir)
-	fmt.Println()
-	log.Println("WARN: Do not share your secure private key with anyone.")
+
+	account := external.NewAccount(key.Address)
+
+	log.Printf("An external account with a balance of %s was created\n", account.Balance().String())
+	log.Printf("Address used for account creation: %s\n", key.Address.String())
 }

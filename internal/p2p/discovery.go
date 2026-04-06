@@ -15,6 +15,7 @@ type Handshake struct {
 	done       bool
 }
 
+// NewHandshake creates an instance of Handshake
 func NewHandshake(
 	instigator *Peer,
 	receiver string,

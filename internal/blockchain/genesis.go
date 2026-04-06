@@ -15,8 +15,10 @@ const GenesisFilename = "genesis.dat"
 
 var ErrGenesisMissing = errors.New("genesis not found")
 
-// Genesis holds all the nessecary fields to kickstart the blockchain.
-// The most important fields being coinbase address (Coinbase): This is the address of the wallet key used to create the coinbase transaction. initial value (InitialValue): This is to determine how many FAB coins are created and put into circulation on genesis creation.
+// Genesis holds all the necessary fields to kickstart the blockchain.
+// The most important fields being Coinbase address: this is the address of the wallet key
+// used to create the Coinbase transaction. initial value (InitialValue): This is to determine how many
+// FAB coins are created and put into circulation on genesis creation.
 type Genesis struct {
 	CreationTime int64
 	GenesisHash  types.Hash
@@ -25,7 +27,7 @@ type Genesis struct {
 	InitialValue types.Amount
 }
 
-// Create a new genesis given time of creation, coinbase wallet key address, and the initial value.
+// NewGenesis creates the Genesis block and sets the hash of Genesis block.
 func NewGenesis(time int64, coinbase types.Address, value types.Amount) *Genesis {
 	g := &Genesis{
 		CreationTime: time,
@@ -42,6 +44,8 @@ func (g *Genesis) computeHash() types.Hash {
 	return sha256.Sum256(enc)
 }
 
+// ToBlock As mentioned in chain.go, Genesis is a block BUT a Block is not a genesis.
+// Converts Genesis to a traditional blockchain.Block.
 func (g *Genesis) ToBlock() (*Block, error) {
 	enc, err := rlp.Encode(g.Txs)
 	if err != nil {
@@ -67,7 +71,9 @@ func (g *Genesis) ToBlock() (*Block, error) {
 	}, nil
 }
 
-// Write the genesis to the disk.
+// Write does the same operation as Write in chain.go.
+// Write in this context (genesis.go), is a compatible version
+// of Write for the Genesis struct.
 func (g *Genesis) Write(datadir string) error {
 	data, err := rlp.Encode(g)
 	if err != nil {
@@ -82,7 +88,9 @@ func (g *Genesis) Write(datadir string) error {
 	return os.WriteFile(path, data, 0600)
 }
 
-// Load genesis block from the disk.
+// LoadGenesis loads the genesis from the disk (.dat file)
+// if present. If not present, or the file is empty for some reason,
+// it will return an error.
 func LoadGenesis(root string) (*Genesis, error) {
 	path := filepath.Join(root, "genesis", GenesisFilename)
 

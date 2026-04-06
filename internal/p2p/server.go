@@ -5,10 +5,8 @@ import (
 	"net"
 )
 
-// StartServer is used in the cmd/fabnet folder.
-// It starts the server that peers connect to to find/see one another.
-// Later, this will be modified to somehow run automatically when using
-// cli/node.
+// StartServer starts the networking server and listens for incoming
+// peer connections.
 func StartServer(address string, manager *PeerManager, disk *DiskStorage) {
 	ln, err := net.Listen("tcp", address)
 	if err != nil {

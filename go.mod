@@ -4,7 +4,6 @@ go 1.25.8
 
 require (
 	github.com/alexflint/go-arg v1.6.1
-	github.com/google/uuid v1.6.0
 	github.com/holiman/uint256 v1.3.2
 	github.com/syndtr/goleveldb v1.0.0
 	golang.org/x/crypto v0.49.0

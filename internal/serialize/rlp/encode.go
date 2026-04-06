@@ -26,6 +26,13 @@ func encodeValue(v reflect.Value) ([]byte, error) {
 	}
 
 	switch v.Kind() {
+
+	case reflect.Bool:
+		if v.Bool() {
+			return encodeBytes([]byte{1}), nil
+		}
+		return encodeBytes([]byte{}), nil
+
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		b := intToBytes(int(v.Uint()))
 		return encodeBytes(b), nil
@@ -41,6 +48,7 @@ func encodeValue(v reflect.Value) ([]byte, error) {
 		if v.Type().Elem().Kind() == reflect.Uint8 {
 			return encodeBytes(v.Bytes()), nil
 		}
+
 		var encodedItems []byte
 		for i := 0; i < v.Len(); i++ {
 			e, err := encodeValue(v.Index(i))
@@ -51,7 +59,7 @@ func encodeValue(v reflect.Value) ([]byte, error) {
 		}
 		return encodeList(encodedItems), nil
 
-	case reflect.Array: // <--- NEW: handle fixed-size arrays like [32]byte
+	case reflect.Array:
 		if v.Type().Elem().Kind() == reflect.Uint8 {
 			b := make([]byte, v.Len())
 			for i := 0; i < v.Len(); i++ {
@@ -59,6 +67,7 @@ func encodeValue(v reflect.Value) ([]byte, error) {
 			}
 			return encodeBytes(b), nil
 		}
+
 		var encodedItems []byte
 		for i := 0; i < v.Len(); i++ {
 			e, err := encodeValue(v.Index(i))
@@ -75,12 +84,15 @@ func encodeValue(v reflect.Value) ([]byte, error) {
 			if !v.Type().Field(i).IsExported() {
 				continue
 			}
+
 			e, err := encodeValue(v.Field(i))
 			if err != nil {
 				return nil, err
 			}
+
 			encodedFields = append(encodedFields, e...)
 		}
+
 		return encodeList(encodedFields), nil
 
 	default:
@@ -89,32 +101,49 @@ func encodeValue(v reflect.Value) ([]byte, error) {
 }
 
 func encodeBytes(b []byte) []byte {
+
 	if len(b) == 1 && b[0] <= 0x7f {
 		return b
 	}
+
 	if len(b) <= 55 {
 		return append([]byte{0x80 + byte(len(b))}, b...)
 	}
+
 	lenBytes := intToBytes(len(b))
-	return append(append([]byte{0xb7 + byte(len(lenBytes))}, lenBytes...), b...)
+
+	return append(
+		append([]byte{0xb7 + byte(len(lenBytes))}, lenBytes...),
+		b...,
+	)
 }
 
 func encodeList(b []byte) []byte {
+
 	if len(b) <= 55 {
 		return append([]byte{0xc0 + byte(len(b))}, b...)
 	}
+
 	lenBytes := intToBytes(len(b))
-	return append(append([]byte{0xf7 + byte(len(lenBytes))}, lenBytes...), b...)
+
+	return append(
+		append([]byte{0xf7 + byte(len(lenBytes))}, lenBytes...),
+		b...,
+	)
 }
 
 func intToBytes(n int) []byte {
+
 	if n == 0 {
 		return []byte{}
 	}
+
 	var b []byte
+
 	for n > 0 {
 		b = append([]byte{byte(n & 0xff)}, b...)
 		n >>= 8
 	}
+
 	return b
 }

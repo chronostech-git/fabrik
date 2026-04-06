@@ -2,6 +2,7 @@ package p2p
 
 import "net"
 
+// GetLocalIP returns local IP address
 func GetLocalIP() (string, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {

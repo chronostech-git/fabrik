@@ -14,6 +14,8 @@ type Message struct {
 	Data string `json:"data"`
 }
 
+// ParseMessage parses a message based on the message Type
+// and the Data contained in the message.
 func ParseMessage(line string) (*Message, error) {
 	parts := strings.SplitN(line, " ", 2)
 	if len(parts) != 2 {
