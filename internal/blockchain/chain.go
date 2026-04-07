@@ -14,12 +14,6 @@ import (
 
 type BlockCache []*Block
 
-type ChainWriter interface {
-	AddBlock(b *Block)          // Add a single block to the cache
-	AddChain(blocks []*Block)   // Add multiple blocks to the cache
-	FlushChainFromCache() error // Flush multiple blocks from the cache
-}
-
 type Chain struct {
 	DB            storage.Database // NOTE: Using the interface means it can be leveldb OR memorydb.
 	State         *state.ChainState
