@@ -4,11 +4,11 @@ CHAIN   := $(BINDIR)\chain.exe
 FVM     := $(BINDIR)\fvm.exe
 ACCOUNT := $(BINDIR)\account.exe
 FABNET  := $(BINDIR)\fabnet.exe
-WALLET  := $(BINDIR)\wallet.exe
+FABKEY  := $(BINDIR)\fabkey.exe
 
 .PHONY: all clean deps
 
-all: deps fvm account chain fabnet wallet
+all: deps chain fvm account fabnet fabkey
 
 deps:
 	@echo Ensuring Go modules are installed...
@@ -27,8 +27,8 @@ account:
 fabnet:
 	go build -o $(FABNET) .\cmd\fabnet
 
-wallet:
-	go build -o $(WALLET) .\cmd\wallet
+fabkey:
+	go build -o $(FABKEY) .\cmd\fabkey
 
 clean:
 	if exist $(BINDIR) rmdir /s /q $(BINDIR)

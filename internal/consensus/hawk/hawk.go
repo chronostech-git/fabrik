@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chronostech-git/fabrik/internal/blockchain/consensus"
+	"github.com/chronostech-git/fabrik/internal/consensus"
 	"github.com/chronostech-git/fabrik/internal/types"
 )
 

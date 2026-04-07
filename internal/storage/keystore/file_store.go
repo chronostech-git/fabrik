@@ -13,7 +13,7 @@ type FileStore struct {
 	Dir string
 }
 
-// NewFileStore creates a new File Storage given a Data Directory specified using cli/wallet --datadir <datadir>
+// NewFileStore creates a new File Storage given a Data Directory specified using cli/fabkey --datadir <datadir>
 func NewFileStore(datadir string) *FileStore {
 	return &FileStore{
 		Dir: filepath.Join(datadir, "keystore"),

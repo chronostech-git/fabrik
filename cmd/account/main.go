@@ -31,7 +31,7 @@ func main() {
 		account := external.NewAccount(wallet.Key.Address)
 
 		log.Printf("An external account with a balance of %s was created\n", account.Balance().String())
-		log.Println("A new wallet has been created and was used to create your account")
+		log.Println("A new fabkey has been created and was used to create your account")
 		log.Printf("Wallet address: %s\n", wallet.Key.Address.String())
 
 		return

@@ -8,8 +8,8 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/chronostech-git/fabrik/internal/blockchain"
-	"github.com/chronostech-git/fabrik/internal/blockchain/consensus"
-	"github.com/chronostech-git/fabrik/internal/blockchain/consensus/hawk"
+	"github.com/chronostech-git/fabrik/internal/consensus"
+	"github.com/chronostech-git/fabrik/internal/consensus/hawk"
 	"github.com/chronostech-git/fabrik/internal/crypto"
 	"github.com/chronostech-git/fabrik/internal/storage"
 	"github.com/chronostech-git/fabrik/internal/storage/keystore"

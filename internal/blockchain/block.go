@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/chronostech-git/fabrik/internal/blockchain/consensus"
+	"github.com/chronostech-git/fabrik/internal/consensus"
 	"github.com/chronostech-git/fabrik/internal/serialize/rlp"
 	"github.com/chronostech-git/fabrik/internal/state"
 	"github.com/chronostech-git/fabrik/internal/types"

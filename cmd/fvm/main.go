@@ -11,93 +11,72 @@ import (
 
 var args struct {
 	File   string `arg:"--file" help:"Smart contract file (.fab)"`
-	Caller string `arg:"--caller" help:"Your key address"`
+	Caller string `arg:"--caller" help:"Your key address (hex)"`
 	Run    string `arg:"--run" help:"Smart contract bytecode hex"`
 	Debug  bool   `arg:"--debug" help:"Print debug info"`
 	Gas    int    `arg:"--gas" help:"Gas limit" default:"100000"`
 }
 
-func runSmartContractFromFile(
-	file string,
-	gasLimit uint64,
-	debug bool,
-) error {
-	instructions, err := fvm.ParseFile(file)
-	if err != nil {
-		return err
-	}
-
-	bytecode, err := fvm.Compile(instructions)
-	if err != nil {
-		return err
-	}
-
-	prog := fvm.NewProgram(bytecode)
-
-	vm := fvm.New(prog, gasLimit)
-
-	if err := vm.Run(); err != nil {
-		return err
-	}
-
-	if debug {
-		fmt.Println("Compiled bytecode:", hex.EncodeToString(bytecode))
-
-		caller, err := hex.DecodeString(args.Caller)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		vm.PrintContractAddress(caller)
-		vm.PrintStackData()
-		vm.PrintDisasm()
-		vm.PrintGasRemaining()
-	}
-
-	return nil
-}
-
-func runSmartContractFromHex(
-	hexCode []byte,
-	gasLimit uint64,
-	debug bool,
-) error {
-	prog := fvm.NewProgram(hexCode)
-
-	vm := fvm.New(prog, gasLimit)
-
-	if err := vm.Run(); err != nil {
-		return err
-	}
-
-	if debug {
-		fmt.Println("Input (hexidecimal):", hex.EncodeToString(hexCode))
-		vm.PrintStackData()
-		vm.PrintDisasm()
-		vm.PrintGasRemaining()
-	}
-
-	return nil
-}
-
 func main() {
 	arg.MustParse(&args)
 
+	var bytecode []byte
+	var err error
+
+	// Compile from file if --run not provided
 	if args.Run == "" {
-		err := runSmartContractFromFile(args.File, uint64(args.Gas), args.Debug)
+		instructions, err := fvm.ParseFile(args.File)
 		if err != nil {
-			log.Panic(err)
+			log.Panicf("failed to parse file: %v", err)
+		}
+
+		bytecode, err = fvm.Compile(instructions)
+		if err != nil {
+			log.Panicf("compilation error: %v", err)
 		}
 	} else {
-		bytecode, err := fvm.HexToBytes(args.Run)
+		// Use provided hex bytecode
+		bytecode, err = fvm.HexToBytes(args.Run)
 		if err != nil {
-			log.Panic(err)
-		}
-		err = runSmartContractFromHex(bytecode, uint64(args.Gas), args.Debug)
-		if err != nil {
-			log.Panic(err)
+			log.Panicf("failed to parse hex bytecode: %v", err)
 		}
 	}
 
-	fmt.Println("Smart contract executed.")
+	if args.Debug {
+		fmt.Printf("Compiled bytecode (hex): %s\n", hex.EncodeToString(bytecode))
+		disasm, err := fvm.Disassemble(bytecode)
+		if err != nil {
+			fmt.Printf("Disassembly error: %v\n", err)
+		} else {
+			fmt.Println("Disassembled bytecode:")
+			fmt.Println(disasm)
+		}
+	}
+
+	// Create VM and program
+	prog := fvm.NewProgram(bytecode)
+	vm := fvm.New(prog, uint64(args.Gas))
+
+	// Run the VM
+	if err := vm.Run(); err != nil {
+		log.Panicf("VM execution error: %v", err)
+	}
+
+	// Debug output
+	if args.Debug {
+		fmt.Println("Stack after execution:")
+		vm.PrintStackData()
+		fmt.Println("Gas remaining:", vm.GasRemaining())
+
+		if args.Caller != "" {
+			caller, err := hex.DecodeString(args.Caller)
+			if err != nil {
+				log.Panicf("invalid caller hex: %v", err)
+			}
+			fmt.Println("Contract address:")
+			vm.PrintContractAddress(caller)
+		}
+	}
+
+	fmt.Println("Smart contract executed successfully.")
 }

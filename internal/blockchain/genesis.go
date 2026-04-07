@@ -16,7 +16,7 @@ const GenesisFilename = "genesis.dat"
 var ErrGenesisMissing = errors.New("genesis not found")
 
 // Genesis holds all the necessary fields to kickstart the blockchain.
-// The most important fields being Coinbase address: this is the address of the wallet key
+// The most important fields being Coinbase address: this is the address of the fabkey key
 // used to create the Coinbase transaction. initial value (InitialValue): This is to determine how many
 // FAB coins are created and put into circulation on genesis creation.
 type Genesis struct {

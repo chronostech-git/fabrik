@@ -5,6 +5,8 @@
 /cli
 /contracts
 /data
+/.vscode
+/.idea
 
 index.html
 github_auth.txt

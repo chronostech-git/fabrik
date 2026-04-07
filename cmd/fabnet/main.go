@@ -68,7 +68,6 @@ func registerExistingPeers(peers map[string]*p2p.Peer, disk *p2p.DiskStorage) {
 }
 
 func main() {
-	// Parse CLI arguments
 	arg.MustParse(&args)
 
 	disk := p2p.NewDiskStorage(args.DataDir)
@@ -80,6 +79,5 @@ func main() {
 	connectToPeers(args.Peers, peermgr, disk)
 	registerExistingPeers(peermgr.Peers, disk)
 
-	// Block forever (or implement a proper signal handler)
 	select {}
 }
